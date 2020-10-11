@@ -2,16 +2,23 @@ import sys
 
 
 class Vehicle:
+    all_vehicles = []
 
     def __init__(self, color, length, x, y, direction):
+        color = color[0]
         if color in STYLE.keys():
             color = STYLE[color] + color + STYLE['END']
+        self.id = len(Vehicle.all_vehicles)
         self.color = color
         self.length = length
         self.x, self.y = x, y
         self.direction = direction
+        Vehicle.all_vehicles.append(self)
 
     def __repr__(self):
+        return f'({self.id} {self.color} {self.length} {self.x} {self.y} {self.direction})'
+
+    def __str__(self):
         return f'({self.color} {self.length} {self.x} {self.y} {self.direction})'
 
 
@@ -66,6 +73,11 @@ class RushHour:
                 for length in range(v.length):
                     self.grid[v.x][v.y + length] = v.color
 
+    def empty_grid(self):
+        for i in range(self.size):
+            for j in range(self.size):
+                self.grid[i][j] = ' '
+
     def is_free(self, x, y, vehicle=None):
         if vehicle:
             if vehicle.direction in 'Vv' and vehicle.x + vehicle.length - 1 < self.size:
@@ -84,9 +96,9 @@ class RushHour:
 
 
 def main():
-    car_1 = Vehicle('r', 2, 2, 1, 'h')
-    truck_1 = Vehicle('b', 3, 1, 0, 'v')
-    truck_2 = Vehicle('g', 3, 4, 3, 'h')
+    car_1 = Vehicle('red', 2, 2, 1, 'h')
+    truck_1 = Vehicle('blue', 3, 1, 0, 'v')
+    truck_2 = Vehicle('green', 3, 4, 3, 'h')
     puzzle = RushHour(car_1, truck_1, truck_2)
     print(*puzzle.vehicles)
     puzzle.show()
