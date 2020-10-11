@@ -47,7 +47,10 @@ class RushHour:
     def show(self):
         print('-' * (self.size * 2 + 3))
         for i in range(self.size):
-            print('|', *self.grid[i], '|')
+            if i != (self.size - 1) // 2:
+                print('|', *self.grid[i], '|')
+            else:
+                print('|', *self.grid[i], '->')
         print('-' * (self.size * 2 + 3))
 
     def place_vehicles(self):
@@ -65,18 +68,26 @@ class RushHour:
 
     def is_free(self, x, y, vehicle=None):
         if vehicle:
-            if vehicle.direction in 'Vv':
+            if vehicle.direction in 'Vv' and vehicle.x + vehicle.length - 1 < self.size:
                 return all(self.grid[x + i][y] == ' ' for i in range(vehicle.length))
-            elif vehicle.direction in 'Hh':
+            elif vehicle.direction in 'Hh' and vehicle.y + vehicle.length - 1 < self.size:
                 return all(self.grid[x][y + i] == ' ' for i in range(vehicle.length))
+            else:
+                print(f'Vehicle {vehicle} out of playing grid', file=sys.stderr)
+                exit(2)
         else:
-            return self.grid[x][y] == ' '
+            try:
+                return self.grid[x][y] == ' '
+            except IndexError:
+                print(f'Position ({x}, {y}) is outside the grid', file=sys.stderr)
+                exit(3)
 
 
 def main():
-    car = Vehicle('r', 2, 2, 1, 'h')
-    truck = Vehicle('b', 3, 1, 0, 'v')
-    puzzle = RushHour(car, truck)
+    car_1 = Vehicle('r', 2, 2, 1, 'h')
+    truck_1 = Vehicle('b', 3, 1, 0, 'v')
+    truck_2 = Vehicle('g', 3, 4, 3, 'h')
+    puzzle = RushHour(car_1, truck_1, truck_2)
     print(*puzzle.vehicles)
     puzzle.show()
 
