@@ -6,10 +6,18 @@ def main():
     car_1 = Vehicle('red', 2, 2, 1, 'h')
     truck_1 = Vehicle('blue', 3, 1, 0, 'v')
     truck_2 = Vehicle('green', 3, 4, 3, 'h')
+    car_2 = Vehicle('yellow', 2, 0, 5, 'v')
 
-    # Printing game phases for movement testing
+    # TEST - save and load game state
     print(*Vehicle.all)
     puzzle.show()
+    state = puzzle.get_state()
+    puzzle.empty_grid()
+    puzzle.show()
+    puzzle.set_state(state)
+    puzzle.show()
+
+    # TEST - vehicle movement
     truck_1.go_down(2)
     print(*Vehicle.all)
     puzzle.show()
@@ -93,6 +101,15 @@ class RushHour:
                 print('|', *self.grid[i], '->')
         print('-' * (self.size * 2 + 3))
 
+    def get_state(self):
+        return [(v.id, v.length, v.x, v.y, v.is_vertical) for v in self.vehicles]
+
+    def set_state(self, s):
+        self.empty_grid()
+        for i, v in enumerate(self.vehicles):
+            v.id, v.length, v.x, v.y, v.is_vertical = s[i]
+            self.place_vehicle(v)
+
     def place_vehicle(self, v):
         if not self.is_empty(v.x, v.y, v.is_vertical, v.length):
             print(v, 'is overlapping an existing vehicle', file=sys.stderr)
@@ -131,11 +148,11 @@ STYLE = {
     'red': '\33[31m',
     'blue': '\33[34m',
     'green': '\33[36m',
-    'yellow': '\033[93m',
-    'pink': '\033[95m',
     'black': '\33[90m',
-    'light blue': '\033[94m',
-    'END': '\033[0m'
+    'yellow': '\33[93m',
+    'light blue': '\33[94m',
+    'pink': '\33[95m',
+    'END': '\33[0m'
 }
 
 
