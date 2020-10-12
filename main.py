@@ -2,13 +2,12 @@ import sys
 
 
 def main():
-    # Init
-    puzzle = RushHour()
-    car_1 = Vehicle('red', 2, 2, 1, 'h', puzzle)
-    truck_1 = Vehicle('blue', 3, 1, 0, 'v', puzzle)
-    truck_2 = Vehicle('green', 3, 4, 3, 'h', puzzle)
+    # Initialize vehicles
+    car_1 = Vehicle('red', 2, 2, 1, 'h')
+    truck_1 = Vehicle('blue', 3, 1, 0, 'v')
+    truck_2 = Vehicle('green', 3, 4, 3, 'h')
 
-    # Printing game phases for testing movement
+    # Printing game phases for movement testing
     print(*Vehicle.all)
     puzzle.show()
     truck_1.go_down(2)
@@ -28,23 +27,24 @@ def main():
 class Vehicle:
     all = []
 
-    def __init__(self, color, length, x, y, direction, game):
-        color = color[0].lower()
+    def __init__(self, color, length, x, y, direction):
+        identifier = str(hex(len(Vehicle.all) + 1).lstrip('0x'))
+        color = color.lower()
         if color in STYLE.keys():
-            color = STYLE[color] + str(len(Vehicle.all)) + STYLE['END']
-        self.id = color
+            identifier = STYLE[color] + identifier + STYLE['END']
+        self.id = identifier
         self.length = length
         self.x, self.y = x, y
         self.is_vertical = True if direction in 'Vv' else False
-        self.game = game
+        self.game = puzzle
         Vehicle.all.append(self)
-        game.place_vehicle(self)
+        puzzle.place_vehicle(self)
 
     def __repr__(self):
         return f'({self.id} {self.length} {self.x} {self.y} ' + \
                ('v' if self.is_vertical else 'h') + ')'
 
-    def go_up(self, n):
+    def go_up(self, n):  # TODO solve not available block movement
         if self.is_vertical and self.x - n >= 0:
             self.game.remove_vehicle(self)
             self.x -= n
@@ -127,17 +127,18 @@ class RushHour:
 
 
 STYLE = {
-    'w': '\33[30m',  # white
-    'r': '\33[31m',  # red
-    'b': '\33[34m',  # blue
-    'g': '\33[36m',  # green
-    'y': '\033[93m',  # yellow
-    'p': '\033[95m',  # pink
-    'k': '\33[90m',  # black
-    'l': '\033[94m',  # light blue
-    'END': '\033[0m'  # normal
+    'white': '\33[30m',
+    'red': '\33[31m',
+    'blue': '\33[34m',
+    'green': '\33[36m',
+    'yellow': '\033[93m',
+    'pink': '\033[95m',
+    'black': '\33[90m',
+    'light blue': '\033[94m',
+    'END': '\033[0m'
 }
 
 
+puzzle = RushHour()
 if __name__ == '__main__':
     main()
