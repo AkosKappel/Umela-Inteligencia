@@ -102,7 +102,7 @@ class RushHour:
         print('-' * (self.size * 2 + 3))
 
     def get_state(self):
-        return [(v.id, v.length, v.x, v.y, v.is_vertical) for v in self.vehicles]
+        return tuple([(v.id, v.length, v.x, v.y, v.is_vertical) for v in self.vehicles])
 
     def set_state(self, s):
         self.empty_grid()
@@ -114,12 +114,12 @@ class RushHour:
         if not self.is_empty(v.x, v.y, v.is_vertical, v.length):
             print(v, 'is overlapping an existing vehicle', file=sys.stderr)
             exit(1)
-        self.set_vehicle(v, v.id)
+        self.set_block_of_vehicle(v, v.id)
 
     def remove_vehicle(self, v):
-        self.set_vehicle(v, ' ')
+        self.set_block_of_vehicle(v, ' ')
 
-    def set_vehicle(self, v, cell_type):
+    def set_block_of_vehicle(self, v, cell_type):
         if v.is_vertical:
             for length in range(v.length):
                 self.grid[v.x + length][v.y] = cell_type
@@ -141,6 +141,9 @@ class RushHour:
         for i in range(self.size):
             for j in range(self.size):
                 self.grid[i][j] = ' '
+
+    def is_solved(self):
+        return self.grid[(self.size - 1) // 2][self.size - 1] == self.vehicles[0].id
 
 
 STYLE = {
