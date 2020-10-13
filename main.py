@@ -8,14 +8,14 @@ def main():
     truck_2 = Vehicle('green', 3, 4, 3, 'h')
     car_2 = Vehicle('yellow', 2, 0, 5, 'v')
 
-    while not puzzle.is_solved():
-        puzzle.show()
-        car_1.go_right(1)
-    puzzle.show()
+    # while not puzzle.is_solved():  # TODO or car.can_move()
+    #     puzzle.show()
+    #     car_1.go_forward()
+    # puzzle.show()
     # Testing
-    # test_vehicle_movement()
-    # test_save_and_load_state()
-    # test_node_comparison()
+    test_vehicle_movement()
+    test_save_and_load_state()
+    test_node_comparison()
 
 
 def test_vehicle_movement():
@@ -23,22 +23,22 @@ def test_vehicle_movement():
     puzzle.show()
 
     print('B move 2 down')
-    Vehicle.all[1].go_down(2)
+    Vehicle.all[1].go_forward(2)
     print(*Vehicle.all)
     puzzle.show()
 
     print('A move 2 right')
-    Vehicle.all[0].go_right(2)
+    Vehicle.all[0].go_forward(2)
     print(*Vehicle.all)
     puzzle.show()
 
     print('C move 1 left')
-    Vehicle.all[2].go_left(1)
+    Vehicle.all[2].go_backward(1)
     print(*Vehicle.all)
     puzzle.show()
 
     print('B move 3 up')
-    Vehicle.all[1].go_up(3)
+    Vehicle.all[1].go_backward(3)
     print(*Vehicle.all)
     puzzle.show()
 
@@ -66,13 +66,13 @@ def test_node_comparison():
     print(node_1)
 
     print('SAVED NODE 2')
-    Vehicle.all[1].go_down(1)
+    Vehicle.all[1].go_forward(1)
     node_2 = Node(puzzle.get_state())
     puzzle.show()
     print(node_2)
 
     print('SAVED NODE 3')
-    Vehicle.all[1].go_up(1)
+    Vehicle.all[1].go_backward(1)
     node_3 = Node(puzzle.get_state())
     puzzle.show()
     print(node_3)
@@ -119,36 +119,34 @@ class Vehicle:
         return f'({self.id} {self.length} {self.y} {self.x} ' + \
                ('v' if self.is_vertical else 'h') + ')'
 
-    def go_up(self, n):
-        if self.is_vertical and self.y - n >= 0:
-            self.game.remove_vehicle(self)
-            self.y -= n
-            self.game.place_vehicle(self)
-            return True
+    def go_forward(self, n=1):
+        if self.is_vertical:
+            if self.y + self.length + n <= self.game.size:  # down
+                self.game.remove_vehicle(self)
+                self.y += n
+                self.game.place_vehicle(self)
+                return True
+        else:
+            if self.x + self.length + n <= self.game.size:  # right
+                self.game.remove_vehicle(self)
+                self.x += n
+                self.game.place_vehicle(self)
+                return True
         return False
 
-    def go_down(self, n):
-        if self.is_vertical and self.y + self.length + n <= self.game.size:
-            self.game.remove_vehicle(self)
-            self.y += n
-            self.game.place_vehicle(self)
-            return True
-        return False
-
-    def go_left(self, n):
-        if not self.is_vertical and self.x - n >= 0:
-            self.game.remove_vehicle(self)
-            self.x -= n
-            self.game.place_vehicle(self)
-            return True
-        return False
-
-    def go_right(self, n):
-        if not self.is_vertical and self.x + self.length + n <= self.game.size:
-            self.game.remove_vehicle(self)
-            self.x += n
-            self.game.place_vehicle(self)
-            return True
+    def go_backward(self, n=1):
+        if self.is_vertical:
+            if self.y - n >= 0:  # up
+                self.game.remove_vehicle(self)
+                self.y -= n
+                self.game.place_vehicle(self)
+                return True
+        else:
+            if self.x - n >= 0:  # left
+                self.game.remove_vehicle(self)
+                self.x -= n
+                self.game.place_vehicle(self)
+                return True
         return False
 
 
