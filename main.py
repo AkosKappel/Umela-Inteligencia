@@ -8,10 +8,14 @@ def main():
     truck_2 = Vehicle('green', 3, 4, 3, 'h')
     car_2 = Vehicle('yellow', 2, 0, 5, 'v')
 
+    while not puzzle.is_solved():
+        puzzle.show()
+        car_1.go_right(1)
+    puzzle.show()
     # Testing
-    test_vehicle_movement()
-    test_save_and_load_state()
-    test_node_comparison()
+    # test_vehicle_movement()
+    # test_save_and_load_state()
+    # test_node_comparison()
 
 
 def test_vehicle_movement():
@@ -166,13 +170,10 @@ class RushHour:
     def show(self):
         print('-' * (self.size * 2 + 3))
         for i in range(self.size):
-            if i != self.vehicles[0].y:
-                print('|', *self.grid[i], '|')
-            else:
-                print('|', *self.grid[i], '->')
+            print('|', *self.grid[i], '|')
         print('-' * (self.size * 2 + 3))
 
-    def get_state(self):
+    def get_state(self):  # TODO return node ?
         return tuple([(v.id, v.length, v.y, v.x, v.is_vertical) for v in self.vehicles])
 
     def set_state(self, s):
@@ -214,7 +215,10 @@ class RushHour:
                 self.grid[i][j] = ' '
 
     def is_solved(self):
-        return self.grid[(self.size - 1) // 2][self.size - 1] == self.vehicles[0].id
+        v = self.vehicles[0]
+        if v.is_vertical:
+            return v.y + v.length == self.size
+        return v.x + v.length == self.size
 
 
 class Node:
