@@ -100,7 +100,7 @@ STYLE = {  # Available vehicle colors:
 class Vehicle:
     all = []
 
-    def __init__(self, color, length, x, y, direction):
+    def __init__(self, color, length, y, x, direction):
         color = color.lower()
         self.color = STYLE[color] if color in STYLE.keys() else None
         self.id = chr(len(Vehicle.all) + 65)
@@ -112,37 +112,37 @@ class Vehicle:
         self.game.place_vehicle(self)
 
     def __repr__(self):
-        return f'({self.id} {self.length} {self.x} {self.y} ' + \
+        return f'({self.id} {self.length} {self.y} {self.x} ' + \
                ('v' if self.is_vertical else 'h') + ')'
 
     def go_up(self, n):
-        if self.is_vertical and self.x - n >= 0:
-            self.game.remove_vehicle(self)
-            self.x -= n
-            self.game.place_vehicle(self)
-            return True
-        return False
-
-    def go_down(self, n):
-        if self.is_vertical and self.x + self.length + n <= self.game.size:
-            self.game.remove_vehicle(self)
-            self.x += n
-            self.game.place_vehicle(self)
-            return True
-        return False
-
-    def go_left(self, n):
-        if not self.is_vertical and self.y - n >= 0:
+        if self.is_vertical and self.y - n >= 0:
             self.game.remove_vehicle(self)
             self.y -= n
             self.game.place_vehicle(self)
             return True
         return False
 
-    def go_right(self, n):
-        if not self.is_vertical and self.y + self.length + n <= self.game.size:
+    def go_down(self, n):
+        if self.is_vertical and self.y + self.length + n <= self.game.size:
             self.game.remove_vehicle(self)
             self.y += n
+            self.game.place_vehicle(self)
+            return True
+        return False
+
+    def go_left(self, n):
+        if not self.is_vertical and self.x - n >= 0:
+            self.game.remove_vehicle(self)
+            self.x -= n
+            self.game.place_vehicle(self)
+            return True
+        return False
+
+    def go_right(self, n):
+        if not self.is_vertical and self.x + self.length + n <= self.game.size:
+            self.game.remove_vehicle(self)
+            self.x += n
             self.game.place_vehicle(self)
             return True
         return False
@@ -166,23 +166,23 @@ class RushHour:
     def show(self):
         print('-' * (self.size * 2 + 3))
         for i in range(self.size):
-            if i != (self.size - 1) // 2:
+            if i != self.vehicles[0].y:
                 print('|', *self.grid[i], '|')
             else:
                 print('|', *self.grid[i], '->')
         print('-' * (self.size * 2 + 3))
 
     def get_state(self):
-        return tuple([(v.id, v.length, v.x, v.y, v.is_vertical) for v in self.vehicles])
+        return tuple([(v.id, v.length, v.y, v.x, v.is_vertical) for v in self.vehicles])
 
     def set_state(self, s):
         self.empty_grid()
         for i, v in enumerate(self.vehicles):
-            v.id, v.length, v.x, v.y, v.is_vertical = s[i]
+            v.id, v.length, v.y, v.x, v.is_vertical = s[i]
             self.place_vehicle(v)
 
     def place_vehicle(self, v):
-        if not self.is_empty(v.x, v.y, v.is_vertical, v.length):
+        if not self.is_empty(v.y, v.x, v.is_vertical, v.length):
             print(v, 'is overlapping an existing vehicle', file=sys.stderr)
             exit(1)
         self.set_block_of_vehicle(v, v.color + v.id + STYLE['END'] if v.color else v.id)
@@ -193,10 +193,10 @@ class RushHour:
     def set_block_of_vehicle(self, v, cell_type):
         if v.is_vertical:
             for length in range(v.length):
-                self.grid[v.x + length][v.y] = cell_type
+                self.grid[v.y + length][v.x] = cell_type
         else:
             for length in range(v.length):
-                self.grid[v.x][v.y + length] = cell_type
+                self.grid[v.y][v.x + length] = cell_type
 
     def is_empty(self, x, y, is_vertical=None, length=1):
         if is_vertical and x + length <= self.size:
