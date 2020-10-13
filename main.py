@@ -11,70 +11,121 @@ def main():
     # TEST - save and load game state
     print(*Vehicle.all)
     puzzle.show()
-    state = puzzle.get_state()
+    start_state = puzzle.get_state()
     puzzle.empty_grid()
     puzzle.show()
-    puzzle.set_state(state)
+    puzzle.set_state(start_state)
+    print(*Vehicle.all)
     puzzle.show()
 
     # TEST - vehicle movement
     truck_1.go_down(2)
     print(*Vehicle.all)
     puzzle.show()
+
     car_1.go_right(2)
     print(*Vehicle.all)
     puzzle.show()
+
     truck_2.go_left(1)
     print(*Vehicle.all)
     puzzle.show()
+
     truck_1.go_up(3)
     print(*Vehicle.all)
     puzzle.show()
+
+    # TEST - node representation
+    state_1 = puzzle.get_state()
+    print(state_1)
+    n_1 = Node(state_1)
+    print(n_1)
+
+    # TEST - node comparison
+    puzzle.set_state(start_state)
+    puzzle.show()
+    n_start = Node(start_state)
+    truck_1.go_up(1)
+    puzzle.show()
+    state_2 = puzzle.get_state()
+    n_2 = Node(state_2)
+    truck_1.go_down(1)
+    puzzle.show()
+    state_3 = puzzle.get_state()
+    n_3 = Node(state_3)
+    if n_3 == n_start:
+        print("n3 = ns")
+    if n_2 == n_start:
+        print('error')
+    if n_1 != n_start:
+        print('n1 != ns')
+
+
+STYLE = {  # Available vehicle colors:
+    'white': '\33[30m',
+    'red': '\33[31m',
+    'green': '\33[32m',
+    'blue': '\33[34m',
+    'purple': '\33[35m',
+    'cyan': '\33[36m',
+    'grey': '\33[37m',
+    'black': '\33[90m',
+    'yellow': '\33[93m',
+    'light blue': '\33[94m',
+    'pink': '\33[95m',
+    'END': '\33[0m'
+}
 
 
 class Vehicle:
     all = []
 
     def __init__(self, color, length, x, y, direction):
-        identifier = str(hex(len(Vehicle.all) + 1).lstrip('0x'))
         color = color.lower()
-        if color in STYLE.keys():
-            identifier = STYLE[color] + identifier + STYLE['END']
-        self.id = identifier
+        self.color = STYLE[color] if color in STYLE.keys() else None
+        self.id = chr(len(Vehicle.all) + 65)
         self.length = length
         self.x, self.y = x, y
         self.is_vertical = True if direction in 'Vv' else False
-        self.game = puzzle
         Vehicle.all.append(self)
-        puzzle.place_vehicle(self)
+        self.game = puzzle
+        self.game.place_vehicle(self)
 
     def __repr__(self):
         return f'({self.id} {self.length} {self.x} {self.y} ' + \
                ('v' if self.is_vertical else 'h') + ')'
 
-    def go_up(self, n):  # TODO solve not available block movement
+    def go_up(self, n):
         if self.is_vertical and self.x - n >= 0:
             self.game.remove_vehicle(self)
             self.x -= n
             self.game.place_vehicle(self)
+            return True
+        return False
 
     def go_down(self, n):
         if self.is_vertical and self.x + self.length + n <= self.game.size:
             self.game.remove_vehicle(self)
             self.x += n
             self.game.place_vehicle(self)
+            return True
+        return False
 
     def go_left(self, n):
         if not self.is_vertical and self.y - n >= 0:
             self.game.remove_vehicle(self)
             self.y -= n
             self.game.place_vehicle(self)
+            return True
+        return False
 
     def go_right(self, n):
         if not self.is_vertical and self.y + self.length + n <= self.game.size:
             self.game.remove_vehicle(self)
             self.y += n
             self.game.place_vehicle(self)
+            return True
+        return False
 
 
 class RushHour:
@@ -114,7 +165,7 @@ class RushHour:
         if not self.is_empty(v.x, v.y, v.is_vertical, v.length):
             print(v, 'is overlapping an existing vehicle', file=sys.stderr)
             exit(1)
-        self.set_block_of_vehicle(v, v.id)
+        self.set_block_of_vehicle(v, v.color + v.id + STYLE['END'] if v.color else v.id)
 
     def remove_vehicle(self, v):
         self.set_block_of_vehicle(v, ' ')
@@ -146,17 +197,22 @@ class RushHour:
         return self.grid[(self.size - 1) // 2][self.size - 1] == self.vehicles[0].id
 
 
-STYLE = {
-    'white': '\33[30m',
-    'red': '\33[31m',
-    'blue': '\33[34m',
-    'green': '\33[36m',
-    'black': '\33[90m',
-    'yellow': '\33[93m',
-    'light blue': '\33[94m',
-    'pink': '\33[95m',
-    'END': '\33[0m'
-}
+class Node:
+    all = []
+    # TODO add some kind of representation for all previous states
+
+    def __init__(self, game_state):
+        self.state = game_state
+        self.id = len(Node.all)
+        Node.all.append(self)
+
+    def __repr__(self):
+        return f'Node {self.id}: ' + \
+               ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
+                         ('v' if v[4] else 'h') + ')' for v in self.state])
+
+    def __eq__(self, other):
+        return self.state == other.state
 
 
 puzzle = RushHour()
