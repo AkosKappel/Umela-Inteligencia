@@ -8,57 +8,77 @@ def main():
     truck_2 = Vehicle('green', 3, 4, 3, 'h')
     car_2 = Vehicle('yellow', 2, 0, 5, 'v')
 
-    # TEST - save and load game state
+    # Testing
+    test_vehicle_movement()
+    test_save_and_load_state()
+    test_node_comparison()
+
+
+def test_vehicle_movement():
     print(*Vehicle.all)
     puzzle.show()
-    start_state = puzzle.get_state()
+
+    print('B move 2 down')
+    Vehicle.all[1].go_down(2)
+    print(*Vehicle.all)
+    puzzle.show()
+
+    print('A move 2 right')
+    Vehicle.all[0].go_right(2)
+    print(*Vehicle.all)
+    puzzle.show()
+
+    print('C move 1 left')
+    Vehicle.all[2].go_left(1)
+    print(*Vehicle.all)
+    puzzle.show()
+
+    print('B move 3 up')
+    Vehicle.all[1].go_up(3)
+    print(*Vehicle.all)
+    puzzle.show()
+
+
+def test_save_and_load_state():
+    print('SAVE STATE 1')
+    state_1 = puzzle.get_state()
+    print(*Vehicle.all)
+    puzzle.show()
+
+    print('EMPTY GRID')
     puzzle.empty_grid()
     puzzle.show()
-    puzzle.set_state(start_state)
+
+    print('LOAD STATE 1')
+    puzzle.set_state(state_1)
     print(*Vehicle.all)
     puzzle.show()
 
-    # TEST - vehicle movement
-    truck_1.go_down(2)
-    print(*Vehicle.all)
-    puzzle.show()
 
-    car_1.go_right(2)
-    print(*Vehicle.all)
+def test_node_comparison():
+    print('SAVED NODE 1')
+    node_1 = Node(puzzle.get_state())
     puzzle.show()
+    print(node_1)
 
-    truck_2.go_left(1)
-    print(*Vehicle.all)
+    print('SAVED NODE 2')
+    Vehicle.all[1].go_down(1)
+    node_2 = Node(puzzle.get_state())
     puzzle.show()
+    print(node_2)
 
-    truck_1.go_up(3)
-    print(*Vehicle.all)
+    print('SAVED NODE 3')
+    Vehicle.all[1].go_up(1)
+    node_3 = Node(puzzle.get_state())
     puzzle.show()
+    print(node_3)
 
-    # TEST - node representation
-    state_1 = puzzle.get_state()
-    print(state_1)
-    n_1 = Node(state_1)
-    print(n_1)
-
-    # TEST - node comparison
-    puzzle.set_state(start_state)
-    puzzle.show()
-    n_start = Node(start_state)
-    truck_1.go_up(1)
-    puzzle.show()
-    state_2 = puzzle.get_state()
-    n_2 = Node(state_2)
-    truck_1.go_down(1)
-    puzzle.show()
-    state_3 = puzzle.get_state()
-    n_3 = Node(state_3)
-    if n_3 == n_start:
-        print("n3 = ns")
-    if n_2 == n_start:
-        print('error')
-    if n_1 != n_start:
-        print('n1 != ns')
+    if node_1 == node_3:
+        print('NODE 1 == NODE 2')
+    if node_1 == node_2:
+        print('ERROR: NODE 1 != NODE 2', file=sys.stderr)
+    if node_3 != node_2:
+        print('NODE 3 != NODE 2')
 
 
 STYLE = {  # Available vehicle colors:
@@ -185,7 +205,7 @@ class RushHour:
             return all(self.grid[x][y + i] == ' ' for i in range(length))
         elif is_vertical is None and x < self.size and y < self.size:
             return self.grid[x][y] == ' '
-        print(f'Position ({x}, {y}) is outside the grid', file=sys.stderr)
+        print(f'Vehicle starting at ({x}, {y}) is outside the grid', file=sys.stderr)
         exit(2)
 
     def empty_grid(self):
