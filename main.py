@@ -1,27 +1,77 @@
+from collections import deque
+import time
 import sys
 
 
 def main():
     # Initialize vehicles
+    # Vehicle('red', 2, 2, 1, 'h')
+    # Vehicle('orange', 2, 0, 0, 'h')
+    # Vehicle('yellow', 3, 1, 0, 'v')
+    # Vehicle('purple', 2, 4, 0, 'v')
+    # Vehicle('green', 3, 1, 3, 'v')
+    # Vehicle('light blue', 3, 5, 2, 'h')
+    # Vehicle('grey', 2, 4, 4, 'h')
+    # Vehicle('blue', 3, 0, 5, 'v')
+
     Vehicle('red', 2, 2, 1, 'h')
-    Vehicle('orange', 2, 0, 0, 'h')
-    Vehicle('yellow', 3, 1, 0, 'v')
-    Vehicle('purple', 2, 4, 0, 'v')
-    Vehicle('green', 3, 1, 3, 'v')
-    Vehicle('light blue', 3, 5, 2, 'h')
-    Vehicle('grey', 2, 4, 4, 'h')
-    Vehicle('blue', 3, 0, 5, 'v')
+    Vehicle('blue', 3, 1, 0, 'v')
+    Vehicle('green', 3, 4, 3, 'h')
+    Vehicle('yellow', 2, 1, 5, 'v')
 
     start = puzzle.get_state()
-    depth_first_search(start)
     breadth_first_search(start)
+    depth_first_search(start)
 
 
+def timer(function):
+    def wrapper(args_for_function):
+        start = time.time()
+        function(args_for_function)
+        end = time.time()
+        print(f'Algorithm executed in {end - start:.3f} seconds.')
+    return wrapper
+
+
+@timer
 def breadth_first_search(start_state):
     solution = None
-    # TODO finish algorithm
+    visited_nodes = set()
+    queue = deque()
+
+    puzzle.show()
+    queue.append(start_state)
+    while queue:
+        current = queue.popleft()
+        visited_nodes.add(current.state)
+        puzzle.set_state(current)
+        current.create_children()
+        if puzzle.is_solved():
+            print('SOLVED')  # TODO
+            solution = current
+            break
+
+        while current.has_children():
+            child = current.children.pop()
+            if child not in visited_nodes:
+                queue.append(Node(child, parent=current))
+
+    if solution:
+        print(solution.state)
+        puzzle.set_state(solution)
+        puzzle.show()
+    else:
+        print('UNSOLVABLE')
+
+    total_depth = 0
+    while solution.has_parent():
+        print(solution.parent.state)
+        solution = solution.parent
+        total_depth += 1
+    print('DEPTH', total_depth)
 
 
+@timer
 def depth_first_search(start_state):
     solution = None
     visited_nodes = set()
@@ -34,7 +84,7 @@ def depth_first_search(start_state):
     while True:
         visited_nodes.add(current.state)
         if puzzle.is_solved():
-            print('SOLVED')  # TODO remove
+            print('SOLVED')  # TODO
             solution = current
             break
 
@@ -52,14 +102,16 @@ def depth_first_search(start_state):
             if current.has_parent():
                 current = current.parent
             else:
-                print('UNSOLVABLE')  # TODO remove
                 break
 
     if solution:
         print(solution.state)
+        puzzle.set_state(solution)
+        puzzle.show()
+    else:
+        print('UNSOLVABLE')  # TODO
     print('Total steps', total_steps)
-    puzzle.set_state(solution)
-    puzzle.show()
+
     # while solution.has_parent():
     #     print(solution.parent.state)
     #     solution = solution.parent
@@ -161,12 +213,6 @@ class RushHour:
     def __str__(self):
         return '\n'.join(' '.join(self.grid[i]) for i in range(self.size))
 
-    def show(self):
-        print('-' * (self.size * 2 + 3))
-        for i in range(self.size):
-            print('|', *self.grid[i], '|')
-        print('-' * (self.size * 2 + 3))
-
     def get_state(self):
         return Node(tuple([(v.id, v.length, v.y, v.x, v.is_vertical) for v in self.vehicles]))
 
@@ -176,16 +222,22 @@ class RushHour:
             v.id, v.length, v.y, v.x, v.is_vertical = s.state[i]
             self.place_vehicle(v)
 
+    def show(self):
+        print('-' * (self.size * 2 + 3))
+        for i in range(self.size):
+            print('|', *self.grid[i], '|')
+        print('-' * (self.size * 2 + 3))
+
     def place_vehicle(self, v):
         if not self.is_empty(v.x, v.y, v.is_vertical, v.length):
             print(v, 'is overlapping an existing vehicle', file=sys.stderr)
             exit(1)
-        self.set_block_of_vehicle(v, v.color + v.id + STYLE['END'] if v.color else v.id)
+        self.set_vehicle_block(v, v.color + v.id + STYLE['END'] if v.color else v.id)
 
     def remove_vehicle(self, v):
-        self.set_block_of_vehicle(v, ' ')
+        self.set_vehicle_block(v, ' ')
 
-    def set_block_of_vehicle(self, v, cell_type):
+    def set_vehicle_block(self, v, cell_type):
         if v.is_vertical:
             for length in range(v.length):
                 self.grid[v.y + length][v.x] = cell_type
@@ -208,7 +260,6 @@ class RushHour:
             for j in range(self.size):
                 self.grid[i][j] = ' '
 
-    # @property
     def is_solved(self):
         v = self.vehicles[0]
         if v.is_vertical:
@@ -241,7 +292,7 @@ class Node:
             puzzle.set_state(temp_state)
 
     def has_parent(self):
-        return self.parent
+        return self.parent is not None
 
     def has_children(self):
         return self.children != set()
