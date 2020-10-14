@@ -3,35 +3,36 @@ import sys
 
 def main():
     # Initialize vehicles
-    car_1 = Vehicle('red', 2, 2, 1, 'h')
-    truck_1 = Vehicle('blue', 3, 1, 0, 'v')
-    truck_2 = Vehicle('green', 3, 4, 3, 'h')
-    car_2 = Vehicle('yellow', 2, 1, 5, 'v')
+    Vehicle('red', 2, 2, 1, 'h')
+    Vehicle('orange', 2, 0, 0, 'h')
+    Vehicle('yellow', 3, 1, 0, 'v')
+    Vehicle('purple', 2, 4, 0, 'v')
+    Vehicle('green', 3, 1, 3, 'v')
+    Vehicle('light blue', 3, 5, 2, 'h')
+    Vehicle('grey', 2, 4, 4, 'h')
+    Vehicle('blue', 3, 0, 5, 'v')
 
-    puzzle.show()
-    depth_first_search()
-    # while not puzzle.is_solved():
-    #     puzzle.show()
-    #     car_1.go_forward()
-    # puzzle.show()
-    # Testing
-    # test_vehicle_movement()
-    # test_save_and_load_state()
-    # test_node_comparison()
+    start = puzzle.get_state()
+    depth_first_search(start)
+    breadth_first_search(start)
 
 
-def depth_first_search():
-    visited_nodes = set()
+def breadth_first_search(start_state):
     solution = None
-    total_steps = 0
+    # TODO finish algorithm
 
-    start_state = puzzle.get_state()
-    start_state.create_children()
+
+def depth_first_search(start_state):
+    solution = None
+    visited_nodes = set()
 
     current = start_state
+    puzzle.set_state(current)
+    current.create_children()
+    total_steps = 0
+    puzzle.show()
     while True:
         visited_nodes.add(current.state)
-
         if puzzle.is_solved():
             print('SOLVED')  # TODO remove
             solution = current
@@ -42,9 +43,9 @@ def depth_first_search():
             if child not in visited_nodes:
                 current = Node(child, parent=current)
                 puzzle.set_state(current)
-                puzzle.show()
-                total_steps += 1
                 current.create_children()
+                total_steps += 1
+                # puzzle.show()
                 break
 
         if not current.has_children():
@@ -57,81 +58,11 @@ def depth_first_search():
     if solution:
         print(solution.state)
     print('Total steps', total_steps)
-
-
-# def test_vehicle_movement():
-#     print(*Vehicle.all)
-#     puzzle.show()
-#
-#     print('B move 2 down')
-#     Vehicle.all[1].go_forward(2)
-#     print(*Vehicle.all)
-#     puzzle.show()
-#
-#     print('A move 2 right')
-#     Vehicle.all[0].go_forward(2)
-#     print(*Vehicle.all)
-#     puzzle.show()
-#
-#     print('C move 1 left')
-#     Vehicle.all[2].go_backward(1)
-#     print(*Vehicle.all)
-#     puzzle.show()
-#
-#     print('B move 3 up')
-#     Vehicle.all[1].go_backward(3)
-#     print(*Vehicle.all)
-#     puzzle.show()
-#
-#
-# def test_save_and_load_state():
-#     print('SAVE STATE 1')
-#     state_1 = puzzle.get_state()
-#     print(*Vehicle.all)
-#     puzzle.show()
-#
-#     print('EMPTY GRID')
-#     puzzle.empty_grid()
-#     puzzle.show()
-#
-#     print('LOAD STATE 1')
-#     puzzle.set_state(state_1)
-#     print(*Vehicle.all)
-#     puzzle.show()
-#
-#
-# def test_node_comparison():
-#     print('SAVED NODE 1')
-#     node_1 = puzzle.get_state()
-#     puzzle.show()
-#     print(node_1)
-#
-#     print('SAVED NODE 2')
-#     Vehicle.all[1].go_forward(1)
-#     node_2 = puzzle.get_state()
-#     puzzle.show()
-#     print(node_2)
-#
-#     print('SAVED NODE 3')
-#     Vehicle.all[1].go_backward(1)
-#     node_3 = puzzle.get_state()
-#     puzzle.show()
-#     print(node_3)
-#
-#     if node_1 == node_3:
-#         print('NODE 1 == NODE 2')
-#     if node_1 == node_2:
-#         print('ERROR: NODE 1 != NODE 2', file=sys.stderr)
-#     if node_3 != node_2:
-#         print('NODE 3 != NODE 2')
-#
-#     nodes = set()
-#     nodes.add(node_1.state)
-#     if node_2.state not in nodes:
-#         print('node 2 is not in nodes')
-#     nodes.add(node_2.state)
-#     if node_3.state in nodes:
-#         print('node 3 is in nodes')
+    puzzle.set_state(solution)
+    puzzle.show()
+    # while solution.has_parent():
+    #     print(solution.parent.state)
+    #     solution = solution.parent
 
 
 STYLE = {  # Available vehicle colors:
