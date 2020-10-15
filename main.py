@@ -34,101 +34,111 @@ def timer(function):
 
 
 @timer
-def breadth_first_search(start_state):
-    solution = None
-    visited_nodes = set()
-    queue = deque()
-
+def breadth_first_search(start_node):
+    print('#' * 10, 'Breadth First Search', '#' * 10)
+    puzzle.set_state(start_node)
     puzzle.show()
-    queue.append(start_state)
+    solution = None
+    visited_states = set()
+    queue = deque()
+    queue.append(start_node)
     while queue:
         current = queue.popleft()
-        visited_nodes.add(current.state)
+        visited_states.add(current.state)
         puzzle.set_state(current)
         current.create_children()
+
         if puzzle.is_solved():
-            print('SOLVED')  # TODO
             solution = current
             break
 
         while current.has_children():
             child = current.children.pop()
-            if child not in visited_nodes:
+            if child not in visited_states:
                 queue.append(Node(child, parent=current))
 
-    if solution:
-        print(solution.state)
-        puzzle.set_state(solution)
-        puzzle.show()
-    else:
-        print('UNSOLVABLE')
-
-    total_depth = 0
-    while solution.has_parent():
-        print(solution.parent.state)
-        solution = solution.parent
-        total_depth += 1
-    print('DEPTH', total_depth)
+    if not solution:
+        print('Tento stav hry nemá riešenie!')
+        return None
+    path = get_path(solution)
+    for move in path:
+        print(*move)
+    puzzle.set_state(solution)
+    puzzle.show()
+    return path
 
 
 @timer
-def depth_first_search(start_state):
-    solution = None
-    visited_nodes = set()
-
-    current = start_state
-    puzzle.set_state(current)
-    current.create_children()
-    total_steps = 0
+def depth_first_search(start_node):
+    print('#' * 10, 'Depth First Search', '#' * 10)
+    puzzle.set_state(start_node)
+    start_node.create_children()
     puzzle.show()
+    visited_states = set()
+    current = start_node
     while True:
-        visited_nodes.add(current.state)
         if puzzle.is_solved():
-            print('SOLVED')  # TODO
             solution = current
             break
 
+        visited_states.add(current.state)
         while current.has_children():
             child = current.children.pop()
-            if child not in visited_nodes:
+            if child not in visited_states:
                 current = Node(child, parent=current)
                 puzzle.set_state(current)
                 current.create_children()
-                total_steps += 1
-                # puzzle.show()
                 break
 
         if not current.has_children():
             if current.has_parent():
                 current = current.parent
             else:
-                break
+                print('Tento stav hry nemá riešenie!')
+                return None
+    path = get_path(solution)
+    for move in path:
+        print(*move)
+    puzzle.set_state(solution)
+    puzzle.show()
+    return path
 
-    if solution:
-        print(solution.state)
-        puzzle.set_state(solution)
-        puzzle.show()
-    else:
-        print('UNSOLVABLE')  # TODO
-    print('Total steps', total_steps)
 
-    # while solution.has_parent():
-    #     print(solution.parent.state)
-    #     solution = solution.parent
+def get_path(final_node):
+    moves = []
+    current = final_node
+    while current.has_parent():
+        state_2 = current.state
+        current = current.parent
+        state_1 = current.state
+        moves.append(get_move(state_1, state_2))
+    moves.reverse()
+    return moves
+
+
+def get_move(first_state, second_state):
+    for v_1, v_2 in zip(first_state, second_state):
+        if v_1 != v_2:
+            if v_1[4]:
+                dif = v_2[2] - v_1[2]
+                return (v_1[0], 'DOLE', dif) if dif > 0 else (v_1[0], 'HORE', -dif)
+            dif = v_2[3] - v_1[3]
+            return (v_1[0], 'VPRAVO', dif) if dif > 0 else (v_1[0], 'VLAVO', -dif)
 
 
 STYLE = {  # Available vehicle colors:
     'white': '\33[30m',
     'red': '\33[31m',
-    'green': '\33[32m',
+    'orange': '\33[33m',
     'blue': '\33[34m',
     'purple': '\33[35m',
-    'cyan': '\33[36m',
+    'green': '\33[36m',
     'grey': '\33[37m',
     'black': '\33[90m',
     'yellow': '\33[93m',
     'light blue': '\33[94m',
     'pink': '\33[95m',
+    'cyan': '\33[96m',
     'END': '\33[0m'
 }
 
@@ -217,7 +227,7 @@ class RushHour:
         return Node(tuple([(v.id, v.length, v.y, v.x, v.is_vertical) for v in self.vehicles]))
 
     def set_state(self, s):
-        self.empty_grid()
+        self.clear_grid()
         for i, v in enumerate(self.vehicles):
             v.id, v.length, v.y, v.x, v.is_vertical = s.state[i]
             self.place_vehicle(v)
@@ -232,12 +242,12 @@ class RushHour:
         if not self.is_empty(v.x, v.y, v.is_vertical, v.length):
             print(v, 'is overlapping an existing vehicle', file=sys.stderr)
             exit(1)
-        self.set_vehicle_block(v, v.color + v.id + STYLE['END'] if v.color else v.id)
+        self.set_vehicle_cells(v, v.color + v.id + STYLE['END'] if v.color else v.id)
 
     def remove_vehicle(self, v):
-        self.set_vehicle_block(v, ' ')
+        self.set_vehicle_cells(v, ' ')
 
-    def set_vehicle_block(self, v, cell_type):
+    def set_vehicle_cells(self, v, cell_type):
         if v.is_vertical:
             for length in range(v.length):
                 self.grid[v.y + length][v.x] = cell_type
@@ -255,7 +265,7 @@ class RushHour:
         print(f'Point ({x}, {y}) is outside the grid', file=sys.stderr)
         exit(2)
 
-    def empty_grid(self):
+    def clear_grid(self):
         for i in range(self.size):
             for j in range(self.size):
                 self.grid[i][j] = ' '
