@@ -1,23 +1,12 @@
 from collections import deque
+from tests import *
 import time
 import sys
 
 
 def main():
-    # Initialize vehicles
-    # Vehicle('red', 2, 2, 1, 'h')
-    # Vehicle('orange', 2, 0, 0, 'h')
-    # Vehicle('yellow', 3, 1, 0, 'v')
-    # Vehicle('purple', 2, 4, 0, 'v')
-    # Vehicle('green', 3, 1, 3, 'v')
-    # Vehicle('light blue', 3, 5, 2, 'h')
-    # Vehicle('grey', 2, 4, 4, 'h')
-    # Vehicle('blue', 3, 0, 5, 'v')
-
-    Vehicle('red', 2, 2, 1, 'h')
-    Vehicle('blue', 3, 1, 0, 'v')
-    Vehicle('green', 3, 4, 3, 'h')
-    Vehicle('yellow', 2, 1, 5, 'v')
+    for v in test_2:  # TU TREBA ZMENIT CISLO TESTU
+        Vehicle(v[0], v[1], v[2], v[3], v[4])
 
     start = puzzle.get_state()
     breadth_first_search(start)
@@ -29,7 +18,7 @@ def timer(function):
         start = time.time()
         function(args_for_function)
         end = time.time()
-        print(f'Algorithm executed in {end - start:.3f} seconds.')
+        print(f'Algorithm executed in {end - start:.3f} seconds.\n')
     return wrapper
 
 
