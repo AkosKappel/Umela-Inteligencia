@@ -9,8 +9,8 @@ def main():
         Vehicle(v[0], v[1], v[2], v[3], v[4])
 
     start = puzzle.get_state()
-    breadth_first_search(start)
     depth_first_search(start)
+    breadth_first_search(start)
 
 
 def timer(function):
@@ -274,9 +274,14 @@ class Node:
         self.children = set()
 
     def __repr__(self):
-        return f'Node parent({self.parent}), children({self.children.__repr__()}):\n' + \
-               ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
-                         ('v' if v[4] else 'h') + ')' for v in self.state])
+        return 'Node: ' + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
+                                    ('v' if v[4] else 'h') + ')' for v in self.state]) + \
+               f'\nparent = {self.parent}, children = {self.children.__repr__()}\n'
+
+    def __str__(self):
+        return 'Node: ' + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
+                                    ('v' if v[4] else 'h') + ')' for v in self.state]) + \
+               f'\nparent = {self.parent.state}\nchildren count = {len(self.children)}'
 
     def __eq__(self, other):
         return self.state == other.state
@@ -297,6 +302,6 @@ class Node:
         return self.children != set()
 
 
-puzzle = RushHour()
 if __name__ == '__main__':
+    puzzle = RushHour()
     main()
