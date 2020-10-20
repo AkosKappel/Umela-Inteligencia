@@ -5,7 +5,7 @@ import sys
 
 
 def main():
-    for v in test_2:  # TU TREBA ZMENIT CISLO TESTU
+    for v in test_1:  # TU TREBA ZMENIT CISLO TESTU
         Vehicle(v[0], v[1], v[2], v[3], v[4])
 
     start = puzzle.get_state()
@@ -23,62 +23,63 @@ def timer(function):
 
 
 @timer
-def breadth_first_search(start_node):
+def breadth_first_search(start_state, max_depth=8):  # TODO
     print('#' * 10, 'Breadth First Search', '#' * 10)
-    puzzle.set_state(start_node)
-    puzzle.show()
+    state_counter = 0
     solution = None
     visited_states = set()
+    puzzle.set_state(start_state)
+    puzzle.show()
     queue = deque()
-    queue.append(start_node)
+    queue.append((start_state, None))
     while queue:
-        current = queue.popleft()
-        visited_states.add(current.state)
-        puzzle.set_state(current)
-        current.create_children()
-
+        current = Node(*queue.popleft())
+        puzzle.set_state(current.state)
         if puzzle.is_solved():
             solution = current
             break
-
+        # if current.depth > max_depth:
+        #     break
+        current.create_children()
+        state_counter += 1
+        visited_states.add(hash(current))
         while current.has_children():
             child = current.children.pop()
-            if child not in visited_states:
-                queue.append(Node(child, parent=current))
-
-    if not solution:
-        print('Tento stav hry nemá riešenie!')
-        return None
-    path = get_path(solution)
-    for move in path:
-        print(*move)
-    puzzle.set_state(solution)
-    puzzle.show()
-    return path
+            if hash(child) not in visited_states:
+                queue.append((child, current))
+    if solution:
+        path = get_path(solution)
+        puzzle.set_state(solution.state)
+        puzzle.show()
+        print('Path length', len(path))
+        print('Visited states count', state_counter)
+        return path
+    print('Tento stav hry nemá riešenie!')
+    return None
 
 
 @timer
-def depth_first_search(start_node):
-    print('#' * 10, 'Depth First Search', '#' * 10)
-    puzzle.set_state(start_node)
-    start_node.create_children()
-    puzzle.show()
+def depth_first_search(start_state):
+    print('#' * 10, 'Depth First Search', '#' * 10)  # Init
+    state_counter = 0
     visited_states = set()
-    current = start_node
+    puzzle.set_state(start_state)  # Reset game
+    puzzle.show()
+    current = Node(start_state)
+    current.create_children()
     while True:
         if puzzle.is_solved():
             solution = current
             break
-
-        visited_states.add(current.state)
+        state_counter += 1
+        visited_states.add(hash(current))
         while current.has_children():
             child = current.children.pop()
-            if child not in visited_states:
+            if hash(child) not in visited_states:
+                puzzle.set_state(child)
                 current = Node(child, parent=current)
-                puzzle.set_state(current)
                 current.create_children()
                 break
-
         if not current.has_children():
             if current.has_parent():
                 current = current.parent
@@ -86,10 +87,10 @@ def depth_first_search(start_node):
                 print('Tento stav hry nemá riešenie!')
                 return None
     path = get_path(solution)
-    for move in path:
-        print(*move)
-    puzzle.set_state(solution)
+    puzzle.set_state(solution.state)
     puzzle.show()
+    print('Path length', len(path))
+    print('Visited states count', state_counter)
     return path
 
 
@@ -102,6 +103,8 @@ def get_path(final_node):
         state_1 = current.state
         moves.append(get_move(state_1, state_2))
     moves.reverse()
+    for move in moves:
+        print(*move)
     return moves
 
 
@@ -113,6 +116,14 @@ def get_move(first_state, second_state):
                 return (v_1[0], 'DOLE', dif) if dif > 0 else (v_1[0], 'HORE', -dif)
             dif = v_2[3] - v_1[3]
             return (v_1[0], 'VPRAVO', dif) if dif > 0 else (v_1[0], 'VLAVO', -dif)
+
+
+def get_depth(node):
+    depth = 0
+    while node.has_parent():
+        node = node.parent
+        depth += 1
+    return depth
 
 
 STYLE = {  # Available vehicle colors:
@@ -213,13 +224,19 @@ class RushHour:
         return '\n'.join(' '.join(self.grid[i]) for i in range(self.size))
 
     def get_state(self):
-        return Node(tuple([(v.id, v.length, v.y, v.x, v.is_vertical) for v in self.vehicles]))
+        return tuple([(v.id, v.length, v.y, v.x, v.is_vertical) for v in self.vehicles])
 
     def set_state(self, s):
         self.clear_grid()
         for i, v in enumerate(self.vehicles):
-            v.id, v.length, v.y, v.x, v.is_vertical = s.state[i]
+            v.id, v.length, v.y, v.x, v.is_vertical = s[i]
             self.place_vehicle(v)
+
+    def get_node(self):
+        return Node(self.get_state())
+
+    def set_node(self, n):
+        self.set_state(n.state)
 
     def show(self):
         print('-' * (self.size * 2 + 3))
@@ -255,9 +272,11 @@ class RushHour:
         exit(2)
 
     def clear_grid(self):
-        for i in range(self.size):
-            for j in range(self.size):
-                self.grid[i][j] = ' '
+        for v in self.vehicles:
+            self.remove_vehicle(v)
+        # for i in range(self.size):
+        #     for j in range(self.size):
+        #         self.grid[i][j] = ' '
 
     def is_solved(self):
         v = self.vehicles[0]
@@ -272,6 +291,7 @@ class Node:
         self.state = game_state
         self.parent = parent
         self.children = set()
+        # self.depth = parent.depth + 1 if parent else 0
 
     def __repr__(self):
         return 'Node: ' + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
@@ -281,18 +301,22 @@ class Node:
     def __str__(self):
         return 'Node: ' + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
                                     ('v' if v[4] else 'h') + ')' for v in self.state]) + \
-               f'\nparent = {self.parent.state}\nchildren count = {len(self.children)}'
+               f"\nparent = {self.parent.state if self.parent else 'None'}" \
+               f"\nchildren count = {len(self.children)}"
 
     def __eq__(self, other):
         return self.state == other.state
+
+    def __hash__(self):
+        return hash(self.state)
 
     def create_children(self):
         temp_state = puzzle.get_state()
         for v in Vehicle.all:
             while v.can_go_forward():
-                self.children.add(v.go_forward().state)
+                self.children.add(v.go_forward())
             while v.can_go_backward():
-                self.children.add(v.go_backward().state)
+                self.children.add(v.go_backward())
             puzzle.set_state(temp_state)
 
     def has_parent(self):
