@@ -5,7 +5,7 @@ import sys
 
 
 def main():
-    for v in test_1:  # TU TREBA ZMENIT CISLO TESTU
+    for v in test_1:  # Tu treba zmenit cislo testu
         Vehicle(v[0], v[1], v[2], v[3], v[4])
 
     start = puzzle.get_state()
@@ -18,13 +18,13 @@ def timer(function):
         start = time.time()
         function(args_for_function)
         end = time.time()
-        print(f'Algorithm executed in {end - start:.3f} seconds.\n')
+        print(f'Algoritmus bol vykonaný za {end - start:.3f} sekúnd.\n')
     return wrapper
 
 
 @timer
-def breadth_first_search(start_state, max_depth=8):  # TODO
-    print('#' * 10, 'Breadth First Search', '#' * 10)
+def breadth_first_search(start_state, max_depth=8):
+    print('#' * 10, 'Prehľadávanie do šírky', '#' * 10)
     state_counter = 0
     solution = None
     visited_states = set()
@@ -38,12 +38,12 @@ def breadth_first_search(start_state, max_depth=8):  # TODO
         if puzzle.is_solved():
             solution = current
             break
-        # if current.depth > max_depth:
-        #     break
+        if current.depth > max_depth:
+            break
         current.create_children()
         state_counter += 1
         visited_states.add(hash(current))
-        while current.has_children():
+        while current.children != set():
             child = current.children.pop()
             if hash(child) not in visited_states:
                 queue.append((child, current))
@@ -51,8 +51,8 @@ def breadth_first_search(start_state, max_depth=8):  # TODO
         path = get_path(solution)
         puzzle.set_state(solution.state)
         puzzle.show()
-        print('Path length', len(path))
-        print('Visited states count', state_counter)
+        print('Množstvo potrebných ťahov', len(path))
+        print('Počet navštívených stavov:', state_counter)
         return path
     print('Tento stav hry nemá riešenie!')
     return None
@@ -60,10 +60,10 @@ def breadth_first_search(start_state, max_depth=8):  # TODO
 
 @timer
 def depth_first_search(start_state):
-    print('#' * 10, 'Depth First Search', '#' * 10)  # Init
+    print('#' * 10, 'Prehľadávanie do hĺbky', '#' * 10)
     state_counter = 0
     visited_states = set()
-    puzzle.set_state(start_state)  # Reset game
+    puzzle.set_state(start_state)
     puzzle.show()
     current = Node(start_state)
     current.create_children()
@@ -73,15 +73,15 @@ def depth_first_search(start_state):
             break
         state_counter += 1
         visited_states.add(hash(current))
-        while current.has_children():
+        while current.children != set():
             child = current.children.pop()
             if hash(child) not in visited_states:
                 puzzle.set_state(child)
                 current = Node(child, parent=current)
                 current.create_children()
                 break
-        if not current.has_children():
-            if current.has_parent():
+        if current.children == set():
+            if current.parent is not None:
                 current = current.parent
             else:
                 print('Tento stav hry nemá riešenie!')
@@ -89,15 +89,15 @@ def depth_first_search(start_state):
     path = get_path(solution)
     puzzle.set_state(solution.state)
     puzzle.show()
-    print('Path length', len(path))
-    print('Visited states count', state_counter)
+    print('Množstvo potrebných ťahov', len(path))
+    print('Počet navštívených stavov:', state_counter)
     return path
 
 
 def get_path(final_node):
     moves = []
     current = final_node
-    while current.has_parent():
+    while current.parent is not None:
         state_2 = current.state
         current = current.parent
         state_1 = current.state
@@ -120,7 +120,7 @@ def get_move(first_state, second_state):
 
 def get_depth(node):
     depth = 0
-    while node.has_parent():
+    while node.parent is not None:
         node = node.parent
         depth += 1
     return depth
@@ -274,9 +274,6 @@ class RushHour:
     def clear_grid(self):
         for v in self.vehicles:
             self.remove_vehicle(v)
-        # for i in range(self.size):
-        #     for j in range(self.size):
-        #         self.grid[i][j] = ' '
 
     def is_solved(self):
         v = self.vehicles[0]
@@ -291,7 +288,7 @@ class Node:
         self.state = game_state
         self.parent = parent
         self.children = set()
-        # self.depth = parent.depth + 1 if parent else 0
+        self.depth = parent.depth + 1 if parent else 0
 
     def __repr__(self):
         return 'Node: ' + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
@@ -318,12 +315,6 @@ class Node:
             while v.can_go_backward():
                 self.children.add(v.go_backward())
             puzzle.set_state(temp_state)
-
-    def has_parent(self):
-        return self.parent is not None
-
-    def has_children(self):
-        return self.children != set()
 
 
 if __name__ == '__main__':
