@@ -5,16 +5,18 @@ import sys
 
 
 def main():
-    for v in test_0x:  # Tu treba zmenit cislo testu TODO otestovat na sachovnici
+    while True:
+        num = int(input('Zadaj číslo testu: ')) - 1
+        if 0 <= num < len(test):
+            break
+        print(f'Nesprávne číslo! Číslo musí byť z intervalu <1, {len(test)}>.')
+
+    for v in test[num]:  # Tu treba zmenit cislo testu
         Vehicle(v[0], v[1], v[2], v[3], v[4])
 
     start = puzzle.get_state()
-    # for i, state in enumerate(Node(start).get_all_moves()):
-    #     puzzle.set_state(state)
-    #     print(i, state)
-    #     print(puzzle)
-    depth_first_search(start)
     breadth_first_search(start)
+    depth_first_search(start)
 
 
 def timer(function):
@@ -44,8 +46,7 @@ def breadth_first_search(start_state):
         if puzzle.is_solved():
             solution = current
             break
-        # print(f'{state_counter}\n', puzzle)  # TODO
-        for state in current.get_all_moves():
+        for state in current.get_possible_states():
             if hash(str(state)) not in visited:
                 queue.append(Node(state, parent=current))
                 visited.add(hash(str(state)))
@@ -62,42 +63,37 @@ def breadth_first_search(start_state):
 
 
 @timer
-def depth_first_search(start_state):  # TODO fix and refactor DFS
+def depth_first_search(start_state):
     print('#' * 10, 'Prehľadávanie do hĺbky', '#' * 10)
-    state_counter = 0
     visited = set()
-
-    puzzle.set_state(start_state)
-    print(puzzle)
     current = Node(start_state)
+    puzzle.set_state(start_state)
     current.create_children()
-
+    print(puzzle)
     while True:
-        state_counter += 1
+        visited.add(hash(current))
         if puzzle.is_solved():
             solution = current
             break
-        # print(f'{state_counter}\n', puzzle)  # TODO
-        visited.add(hash(current))
-        while current.children != set():
+        while len(current.children) > 0:
             child = current.children.pop()
-            if hash(child) not in visited:
-                puzzle.set_state(child)
+            if hash(str(child)) not in visited:
                 current = Node(child, parent=current)
+                puzzle.set_state(child)
                 current.create_children()
                 break
-        if current.children == set():
+        if len(current.children) == 0:
             if current.parent is not None:
                 current = current.parent
             else:
                 print('Tento stav hry nemá riešenie!')
-                print('Počet navštívených stavov:', state_counter)
+                print('Počet navštívených stavov:', len(visited))
                 return None
     path = get_path(solution)
     puzzle.set_state(solution.state)
     print(puzzle)
     print('Množstvo potrebných ťahov', len(path))
-    print('Počet navštívených stavov:', state_counter)
+    print('Počet navštívených stavov:', len(visited))
     return path
 
 
@@ -123,14 +119,6 @@ def get_move(first_state, second_state):
                 return (v_1[0], 'DOLE', dif) if dif > 0 else (v_1[0], 'HORE', -dif)
             dif = v_2[3] - v_1[3]
             return (v_1[0], 'VPRAVO', dif) if dif > 0 else (v_1[0], 'VLAVO', -dif)
-
-
-def get_depth(node):
-    depth = 0
-    while node.parent is not None:
-        node = node.parent
-        depth += 1
-    return depth
 
 
 STYLE = {  # Available vehicle colors:
@@ -288,7 +276,6 @@ class Node:
         self.state = game_state
         self.parent = parent
         self.children = set()
-        self.depth = parent.depth + 1 if parent else 0
 
     def __repr__(self):
         return "Node: " + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} {v[4]})' for v in self.state]) + \
@@ -305,9 +292,9 @@ class Node:
         return self.state == other.state
 
     def __hash__(self):
-        return hash(self.state)
+        return hash(str(self.state))
 
-    def get_all_moves(self):
+    def get_possible_states(self):
         temp_state = puzzle.get_state()
         moves = set()
         for v in Vehicle.all:
