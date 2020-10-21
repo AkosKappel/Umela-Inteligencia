@@ -5,7 +5,7 @@ import sys
 
 
 def main():
-    for v in test_1:  # Tu treba zmenit cislo testu
+    for v in test_5:  # Tu treba zmenit cislo testu
         Vehicle(v[0], v[1], v[2], v[3], v[4])
 
     start = puzzle.get_state()
@@ -27,9 +27,9 @@ def breadth_first_search(start_state, max_depth=8):
     print('#' * 10, 'Prehľadávanie do šírky', '#' * 10)
     state_counter = 0
     solution = None
-    visited_states = set()
+    visited = set()
     puzzle.set_state(start_state)
-    puzzle.show()
+    print(puzzle)
     queue = deque()
     queue.append((start_state, None))
     while queue:
@@ -42,19 +42,20 @@ def breadth_first_search(start_state, max_depth=8):
             break
         current.create_children()
         state_counter += 1
-        visited_states.add(hash(current))
+        visited.add(hash(current))
         while current.children != set():
             child = current.children.pop()
-            if hash(child) not in visited_states:
+            if hash(child) not in visited:
                 queue.append((child, current))
     if solution:
         path = get_path(solution)
         puzzle.set_state(solution.state)
-        puzzle.show()
+        print(puzzle)
         print('Množstvo potrebných ťahov', len(path))
         print('Počet navštívených stavov:', state_counter)
         return path
     print('Tento stav hry nemá riešenie!')
+    print('Počet navštívených stavov:', state_counter)
     return None
 
 
@@ -62,9 +63,9 @@ def breadth_first_search(start_state, max_depth=8):
 def depth_first_search(start_state):
     print('#' * 10, 'Prehľadávanie do hĺbky', '#' * 10)
     state_counter = 0
-    visited_states = set()
+    visited = set()
     puzzle.set_state(start_state)
-    puzzle.show()
+    print(puzzle)
     current = Node(start_state)
     current.create_children()
     while True:
@@ -72,10 +73,10 @@ def depth_first_search(start_state):
             solution = current
             break
         state_counter += 1
-        visited_states.add(hash(current))
+        visited.add(hash(current))
         while current.children != set():
             child = current.children.pop()
-            if hash(child) not in visited_states:
+            if hash(child) not in visited:
                 puzzle.set_state(child)
                 current = Node(child, parent=current)
                 current.create_children()
@@ -85,10 +86,11 @@ def depth_first_search(start_state):
                 current = current.parent
             else:
                 print('Tento stav hry nemá riešenie!')
+                print('Počet navštívených stavov:', state_counter)
                 return None
     path = get_path(solution)
     puzzle.set_state(solution.state)
-    puzzle.show()
+    print(puzzle)
     print('Množstvo potrebných ťahov', len(path))
     print('Počet navštívených stavov:', state_counter)
     return path
@@ -221,7 +223,9 @@ class RushHour:
                'Grid: ' + self.grid.__repr__()
 
     def __str__(self):
-        return '\n'.join(' '.join(self.grid[i]) for i in range(self.size))
+        return '\n'.join(('-' * (self.size * 2 + 3),
+                          *['| ' + ' '.join(self.grid[i]) + ' |' for i in range(self.size)],
+                          '-' * (self.size * 2 + 3)))
 
     def get_state(self):
         return tuple([(v.id, v.length, v.y, v.x, v.is_vertical) for v in self.vehicles])
@@ -231,18 +235,6 @@ class RushHour:
         for i, v in enumerate(self.vehicles):
             v.id, v.length, v.y, v.x, v.is_vertical = s[i]
             self.place_vehicle(v)
-
-    def get_node(self):
-        return Node(self.get_state())
-
-    def set_node(self, n):
-        self.set_state(n.state)
-
-    def show(self):
-        print('-' * (self.size * 2 + 3))
-        for i in range(self.size):
-            print('|', *self.grid[i], '|')
-        print('-' * (self.size * 2 + 3))
 
     def place_vehicle(self, v):
         if not self.is_empty(v.x, v.y, v.is_vertical, v.length):
