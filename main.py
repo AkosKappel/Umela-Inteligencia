@@ -5,10 +5,14 @@ import sys
 
 
 def main():
-    for v in test_5:  # Tu treba zmenit cislo testu
+    for v in test_0x:  # Tu treba zmenit cislo testu TODO otestovat na sachovnici
         Vehicle(v[0], v[1], v[2], v[3], v[4])
 
     start = puzzle.get_state()
+    # for i, state in enumerate(Node(start).get_all_moves()):
+    #     puzzle.set_state(state)
+    #     print(i, state)
+    #     print(puzzle)
     depth_first_search(start)
     breadth_first_search(start)
 
@@ -23,30 +27,28 @@ def timer(function):
 
 
 @timer
-def breadth_first_search(start_state, max_depth=8):
+def breadth_first_search(start_state):
     print('#' * 10, 'Prehľadávanie do šírky', '#' * 10)
     state_counter = 0
     solution = None
     visited = set()
+    queue = deque()
+    queue.append(Node(start_state))
+    visited.add(hash(str(start_state)))
     puzzle.set_state(start_state)
     print(puzzle)
-    queue = deque()
-    queue.append((start_state, None))
     while queue:
-        current = Node(*queue.popleft())
+        state_counter += 1
+        current = queue.popleft()
         puzzle.set_state(current.state)
         if puzzle.is_solved():
             solution = current
             break
-        if current.depth > max_depth:
-            break
-        current.create_children()
-        state_counter += 1
-        visited.add(hash(current))
-        while current.children != set():
-            child = current.children.pop()
-            if hash(child) not in visited:
-                queue.append((child, current))
+        # print(f'{state_counter}\n', puzzle)  # TODO
+        for state in current.get_all_moves():
+            if hash(str(state)) not in visited:
+                queue.append(Node(state, parent=current))
+                visited.add(hash(str(state)))
     if solution:
         path = get_path(solution)
         puzzle.set_state(solution.state)
@@ -60,19 +62,22 @@ def breadth_first_search(start_state, max_depth=8):
 
 
 @timer
-def depth_first_search(start_state):
+def depth_first_search(start_state):  # TODO fix and refactor DFS
     print('#' * 10, 'Prehľadávanie do hĺbky', '#' * 10)
     state_counter = 0
     visited = set()
+
     puzzle.set_state(start_state)
     print(puzzle)
     current = Node(start_state)
     current.create_children()
+
     while True:
+        state_counter += 1
         if puzzle.is_solved():
             solution = current
             break
-        state_counter += 1
+        # print(f'{state_counter}\n', puzzle)  # TODO
         visited.add(hash(current))
         while current.children != set():
             child = current.children.pop()
@@ -160,6 +165,9 @@ class Vehicle:
         self.game.place_vehicle(self)
 
     def __repr__(self):
+        return f'({self.id} {self.length} {self.y} {self.x} {self.is_vertical})'
+
+    def __str__(self):
         return f'({self.id} {self.length} {self.y} {self.x} ' + \
                ('v' if self.is_vertical else 'h') + ')'
 
@@ -218,9 +226,9 @@ class RushHour:
         self.vehicles = Vehicle.all
 
     def __repr__(self):
-        return 'Size: ' + str(self.size) + '\n' + \
-               'Vehicles: ' + self.vehicles.__repr__() + '\n' + \
-               'Grid: ' + self.grid.__repr__()
+        return f'Size: {self.size}\n' + \
+               f'Vehicles: {self.vehicles.__repr__()}\n' + \
+               f'Grid: {self.grid.__repr__()}'
 
     def __str__(self):
         return '\n'.join(('-' * (self.size * 2 + 3),
@@ -283,14 +291,14 @@ class Node:
         self.depth = parent.depth + 1 if parent else 0
 
     def __repr__(self):
-        return 'Node: ' + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
-                                    ('v' if v[4] else 'h') + ')' for v in self.state]) + \
-               f'\nparent = {self.parent}, children = {self.children.__repr__()}\n'
+        return "Node: " + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} {v[4]})' for v in self.state]) + \
+               f"\nparent = {self.parent.state if self.parent else None}" \
+               f"\nchildren({len(self.children)}) = {self.children.__repr__()}\n"
 
     def __str__(self):
-        return 'Node: ' + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
+        return "Node: " + ' '.join([f'({v[0]} {v[1]} {v[2]} {v[3]} ' +
                                     ('v' if v[4] else 'h') + ')' for v in self.state]) + \
-               f"\nparent = {self.parent.state if self.parent else 'None'}" \
+               f"\nparent = {self.parent.state if self.parent else None}" \
                f"\nchildren count = {len(self.children)}"
 
     def __eq__(self, other):
@@ -298,6 +306,17 @@ class Node:
 
     def __hash__(self):
         return hash(self.state)
+
+    def get_all_moves(self):
+        temp_state = puzzle.get_state()
+        moves = set()
+        for v in Vehicle.all:
+            while v.can_go_forward():
+                moves.add(v.go_forward())
+            while v.can_go_backward():
+                moves.add(v.go_backward())
+            puzzle.set_state(temp_state)
+        return moves
 
     def create_children(self):
         temp_state = puzzle.get_state()
