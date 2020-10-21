@@ -2,6 +2,18 @@ from collections import deque
 from tests import *
 import time
 import sys
+"""
+    Slovenská Technická Univerzita
+    Fakulta Informatiky a Informačných technológií
+    Autor: Ákos Kappel
+
+    Program vyrieši hlavolam nazývaný Bláznivá križovatka použitím 
+    prehľadávania stavového priestoru. Na riešenie sú použité dva 
+    rôzne algoritmy: prehľadávanie do širky (Breadth First Search) 
+    a prehľadávanie do hĺbky (Depth First Search).
+
+    Tento projekt vznikol v rámci predmetu Umelá inteligencia.
+"""
 
 
 def main():
@@ -11,7 +23,7 @@ def main():
             break
         print(f'Nesprávne číslo! Číslo musí byť z intervalu <1, {len(test)}>.')
 
-    for v in test[num]:  # Tu treba zmenit cislo testu
+    for v in test[num]:
         Vehicle(v[0], v[1], v[2], v[3], v[4])
 
     start = puzzle.get_state()
@@ -20,6 +32,11 @@ def main():
 
 
 def timer(function):
+    """
+    Funkcia na meranie časov algoritmov.
+    :param function:
+    :return:
+    """
     def wrapper(args_for_function):
         start = time.time()
         function(args_for_function)
@@ -30,6 +47,12 @@ def timer(function):
 
 @timer
 def breadth_first_search(start_state):
+    """
+    Prehľadávanie do šírky. Nájde riešenie
+    hlavolamu na minimálny počet ťahov.
+    :param start_state: začiatočný stav hlavolamu
+    :return: najkratšia postupnosť krokov, ktoré dostanú červené auto z križovatky
+    """
     print('#' * 10, 'Prehľadávanie do šírky', '#' * 10)
     state_counter = 0
     solution = None
@@ -64,6 +87,11 @@ def breadth_first_search(start_state):
 
 @timer
 def depth_first_search(start_state):
+    """
+    Prehľadávanie do hĺbky. Nájde riešenie hlavolamu a využije menej pamäte.
+    :param start_state: začiatočný stav hlavolamu
+    :return: postupnosť posunov, ktoré dostanú červené auto z križovatky
+    """
     print('#' * 10, 'Prehľadávanie do hĺbky', '#' * 10)
     visited = set()
     current = Node(start_state)
@@ -98,6 +126,11 @@ def depth_first_search(start_state):
 
 
 def get_path(final_node):
+    """
+    Zistí postupnosť krokov vedúcich zo začiatočného do cieľového stavu.
+    :param final_node: Cieľový stav hlavolamu
+    :return: postupnosť posunov vozidiel
+    """
     moves = []
     current = final_node
     while current.parent is not None:
@@ -112,6 +145,13 @@ def get_path(final_node):
 
 
 def get_move(first_state, second_state):
+    """
+    Zistí, ktoré vozidlo vykonalo pohyb medzi dvomi stavmi hry
+    a zistí aj o akú operáciu sa jedná.
+    :param first_state: prvý stav
+    :param second_state: druhý stav
+    :return: vykonaná operácia
+    """
     for v_1, v_2 in zip(first_state, second_state):
         if v_1 != v_2:
             if v_1[4]:
@@ -121,7 +161,7 @@ def get_move(first_state, second_state):
             return (v_1[0], 'VPRAVO', dif) if dif > 0 else (v_1[0], 'VLAVO', -dif)
 
 
-STYLE = {  # Available vehicle colors:
+STYLE = {  # Dostupné farby vozidiel:
     'white': '\33[30m',
     'red': '\33[31m',
     'orange': '\33[33m',
@@ -139,6 +179,11 @@ STYLE = {  # Available vehicle colors:
 
 
 class Vehicle:
+    """
+    Trieda pre vozidlá, ktoré sa nachádzajú na hracej ploche.
+    Parametrami vozidla sú farba, dĺžka (2 alebo 3), súradnice
+    ľavého horného okraja vozidla a smer pohybu ('v' alebo 'h').
+    """
     all = []
 
     def __init__(self, color, length, y, x, direction):
@@ -161,13 +206,13 @@ class Vehicle:
 
     def go_forward(self, n=1):
         if self.is_vertical:
-            if self.y + self.length + n <= self.game.size:  # down
+            if self.y + self.length + n <= self.game.size:  # dole
                 self.game.remove_vehicle(self)
                 self.y += n
                 self.game.place_vehicle(self)
                 return self.game.get_state()
         else:
-            if self.x + self.length + n <= self.game.size:  # right
+            if self.x + self.length + n <= self.game.size:  # doprava
                 self.game.remove_vehicle(self)
                 self.x += n
                 self.game.place_vehicle(self)
@@ -176,13 +221,13 @@ class Vehicle:
 
     def go_backward(self, n=1):
         if self.is_vertical:
-            if self.y - n >= 0:  # up
+            if self.y - n >= 0:  # hore
                 self.game.remove_vehicle(self)
                 self.y -= n
                 self.game.place_vehicle(self)
                 return self.game.get_state()
         else:
-            if self.x - n >= 0:  # left
+            if self.x - n >= 0:  # doľava
                 self.game.remove_vehicle(self)
                 self.x -= n
                 self.game.place_vehicle(self)
@@ -207,6 +252,9 @@ class Vehicle:
 
 
 class RushHour:
+    """
+    Hracia plocha hlavomalu s veľkosťou 6x6 políčok.
+    """
 
     def __init__(self):
         self.size = 6
@@ -271,6 +319,11 @@ class RushHour:
 
 
 class Node:
+    """
+    Trieda pre uzol v grafe, ktorý reprezentuje stavový priestor. V uzle
+    sa nachádzajú informácie o aktuálnom stave hlavolamu, o predchádzajúcom
+    stave a o možných stavoch, do ktorých sa dá dostať na jeden ťah.
+    """
 
     def __init__(self, game_state, parent=None):
         self.state = game_state
