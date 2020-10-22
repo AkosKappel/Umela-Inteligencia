@@ -96,5 +96,22 @@ test_9 = (  # TEST 9 - Ziadna prekazka na ceste
     ('cyan', 3, 3, 3, 'h')
 )
 
+test_10 = (  # TEST 10 - minimum 22 tahov
+    ('red', 2, 0, 2, 'h'),
+    ('light blue', 3, 0, 0, 'v'),
+    ('blue', 3, 1, 5, 'v'),
+    ('yellow', 2, 0, 1, 'v'),
+    ('orange', 2, 5, 0, 'h'),
+    ('white', 2, 4, 4, 'h'),
+    ('pink', 3, 3, 0, 'h'),
+    ('purple', 2, 2, 3, 'h'),
+    ('cyan', 2, 1, 2, 'v'),
+    ('black', 2, 4, 2, 'v'),
+    ('grey', 2, 0, 4, 'v'),
+    ('brown', 2, 3, 3, 'v'),
+    ('blue', 2, 5, 3, 'h')
+)
+
 # Zoznam vsetkych testov
-test = (test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9)
+test = (test_1, test_2, test_3, test_4, test_5,
+        test_6, test_7, test_8, test_9, test_10)
