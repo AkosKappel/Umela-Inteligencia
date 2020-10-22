@@ -69,7 +69,7 @@ def breadth_first_search(start_state):
         if puzzle.is_solved():
             solution = current
             break
-        for state in current.get_possible_states():
+        for state in get_possible_states():
             if hash(str(state)) not in visited:
                 queue.append(Node(state, parent=current))
                 visited.add(hash(str(state)))
@@ -96,7 +96,7 @@ def depth_first_search(start_state):
     visited = set()
     current = Node(start_state)
     puzzle.set_state(start_state)
-    current.create_children()
+    current.create_possible_states()
     print(puzzle)
     while True:
         visited.add(hash(current))
@@ -108,7 +108,7 @@ def depth_first_search(start_state):
             if hash(str(child)) not in visited:
                 current = Node(child, parent=current)
                 puzzle.set_state(child)
-                current.create_children()
+                current.create_possible_states()
                 break
         if len(current.children) == 0:
             if current.parent is not None:
@@ -159,6 +159,18 @@ def get_move(first_state, second_state):
                 return (v_1[0], 'DOLE', dif) if dif > 0 else (v_1[0], 'HORE', -dif)
             dif = v_2[3] - v_1[3]
             return (v_1[0], 'VPRAVO', dif) if dif > 0 else (v_1[0], 'VLAVO', -dif)
+
+
+def get_possible_states():
+    temp_state = puzzle.get_state()
+    moves = set()
+    for v in Vehicle.all:
+        while v.can_go_forward():
+            moves.add(v.go_forward())
+        while v.can_go_backward():
+            moves.add(v.go_backward())
+        puzzle.set_state(temp_state)
+    return moves
 
 
 STYLE = {  # Dostupné farby vozidiel:
@@ -347,18 +359,7 @@ class Node:
     def __hash__(self):
         return hash(str(self.state))
 
-    def get_possible_states(self):
-        temp_state = puzzle.get_state()
-        moves = set()
-        for v in Vehicle.all:
-            while v.can_go_forward():
-                moves.add(v.go_forward())
-            while v.can_go_backward():
-                moves.add(v.go_backward())
-            puzzle.set_state(temp_state)
-        return moves
-
-    def create_children(self):
+    def create_possible_states(self):
         temp_state = puzzle.get_state()
         for v in Vehicle.all:
             while v.can_go_forward():
