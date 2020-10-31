@@ -1,23 +1,54 @@
 class Garden:
 
+    block_values = {-1: 'K', -2: 'Z', -3: 'O', -4: 'C'}
+    block_types = {
+        'K': -1,  # Immovable obstacle
+        'Z': -2,  # Yellow leaf
+        'O': -3,  # Orange leaf
+        'C': -4   # Red leaf
+    }
+
     def __init__(self, file):
-        self.field = []
         self.width = 0
         self.length = 0
-        self.rock_count = 0
-        with open(file, 'r') as f:
-            for line in f.readlines():
-                self.field.append([])
-                self.field[self.width] = [*line.split()]
-                self.rock_count += line.count('K')
-                self.width += 1
-            self.length = len(line.split())
+        self.field = []
+        self.rocks = []
+        self.yellow_leaves = []
+        self.orange_leaves = []
+        self.red_leaves = []
+        self.load_field(file)
 
     def __repr__(self):
-        return f'size {self.width} x {self.length}\trocks = {self.rock_count}'
+        return f'size({self.width} {self.length}) rocks({len(self.rocks)}) ' \
+               f'leaves({len(self.yellow_leaves)}, {len(self.orange_leaves)}, {len(self.red_leaves)})'
 
     def __str__(self):
-        return '\n'.join((' '.join(self.field[i]) for i in range(self.width)))
+        s = "\n"
+        for y in range(self.width):
+            for x in range(self.length):
+                s += f"{Garden.block_values.get(self.field[y][x], self.field[y][x])}".rjust(4, ' ')
+            s += "\n"
+        return s
+
+    def load_field(self, file):
+        with open(file, 'r') as f:
+            for y, line in enumerate(f.readlines()):
+                self.field.append([])
+                for x, block in enumerate(line.split()):
+                    self.field[y].append(Garden.block_types.get(block.upper(), 0))
+                    if block.upper() in Garden.block_types.keys():
+                        self.add_obstacle(Garden.block_types[block.upper()], (x, y))
+            self.width, self.length = y + 1, len(line.split())
+
+    def add_obstacle(self, block_value, pos):
+        if block_value == -1:
+            self.rocks.append(pos)
+        elif block_value == -2:
+            self.yellow_leaves.append(pos)
+        elif block_value == -3:
+            self.orange_leaves.append(pos)
+        elif block_value == -4:
+            self.red_leaves.append(pos)
 
 
 class Monk:
