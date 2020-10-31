@@ -50,6 +50,19 @@ class Garden:
         elif self.field[y][x] == -4:
             self.red_leaves.append((x, y))
 
+    def reset_field(self):
+        for y in range(self.width):
+            for x in range(self.length):
+                self.field[y][x] = 0
+        for x, y in self.rocks:
+            self.field[y][x] = -1
+        for x, y in self.yellow_leaves:
+            self.field[y][x] = -2
+        for x, y in self.orange_leaves:
+            self.field[y][x] = -3
+        for x, y in self.red_leaves:
+            self.field[y][x] = -4
+
 
 class Monk:
 
@@ -61,4 +74,4 @@ class Monk:
 
 
 garden = Garden('garden_example1.txt')
-print(repr(garden))
+print(garden)
