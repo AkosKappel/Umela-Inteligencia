@@ -37,18 +37,18 @@ class Garden:
                 for x, block in enumerate(line.split()):
                     self.field[y].append(Garden.block_types.get(block.upper(), 0))
                     if block.upper() in Garden.block_types.keys():
-                        self.add_obstacle(Garden.block_types[block.upper()], (x, y))
+                        self.add_obstacle(x, y)
             self.width, self.length = y + 1, len(line.split())
 
-    def add_obstacle(self, block_value, pos):
-        if block_value == -1:
-            self.rocks.append(pos)
-        elif block_value == -2:
-            self.yellow_leaves.append(pos)
-        elif block_value == -3:
-            self.orange_leaves.append(pos)
-        elif block_value == -4:
-            self.red_leaves.append(pos)
+    def add_obstacle(self, x, y):
+        if self.field[y][x] == -1:
+            self.rocks.append((x, y))
+        elif self.field[y][x] == -2:
+            self.yellow_leaves.append((x, y))
+        elif self.field[y][x] == -3:
+            self.orange_leaves.append((x, y))
+        elif self.field[y][x] == -4:
+            self.red_leaves.append((x, y))
 
 
 class Monk:
@@ -61,4 +61,4 @@ class Monk:
 
 
 garden = Garden('garden_example1.txt')
-print(garden)
+print(repr(garden))
