@@ -1,8 +1,11 @@
 from garden import Garden
-from gene import Gene
-from monk import Monk
+from puzzle import Puzzle
+from population import Population
 import random
 
 if __name__ == "__main__":
-    garden = Garden('garden_example1.txt')
-    print(garden)
+    puzzle = Puzzle('example_1.txt')
+    print(puzzle)
+    test = Population(3, puzzle)
+    print(repr(test))
+    print(test)
