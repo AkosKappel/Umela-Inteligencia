@@ -13,3 +13,7 @@ class Population:
 
     def __str__(self):
         return f'Generation: {self.generation}\n' + '\n'.join(str(m) for m in self.monks)  # TODO remake
+
+    def solve(self):
+        for monk in self.monks:
+            monk.bury_garden()

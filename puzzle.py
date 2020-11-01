@@ -33,8 +33,9 @@ class Puzzle:
                 self.garden.field[y].append(Puzzle.block_types.get(block.upper(), 0))
                 if block.upper() in Puzzle.block_types.keys():
                     self.add_obstacle(x, y)
-        self.garden.width = len(self.garden.field)
-        self.garden.length = len(self.garden.field[0])
+        self.garden.set_parameters(len(self.garden.field), len(self.garden.field[0]),
+                                   len(self.yellow_leaves), len(self.orange_leaves),
+                                   len(self.red_leaves))
 
     def add_obstacle(self, x, y):
         if self.garden.field[y][x] == -1:
