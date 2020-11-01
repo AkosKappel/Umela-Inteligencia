@@ -5,7 +5,7 @@ class Gene:
 
     directions = ('down', 'left', 'up', 'right')
 
-    def __init__(self, x, y):
+    def __init__(self, x, y):  # TODO add more turns
         random.seed()
         idx = random.randrange(2 * (x + y))
         if 0 <= idx < x:  # from top row going down
@@ -24,6 +24,3 @@ class Gene:
 
     def __repr__(self):
         return f'{self.pos}, {self.dir}, {self.cw_turn}'
-
-    def __str__(self):
-        return 'Gene: ' + f'position{self.pos}, direction({self.dir}), clockwise({self.cw_turn})'

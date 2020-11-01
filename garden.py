@@ -10,7 +10,7 @@ class Garden:
 
     def __repr__(self):
         return f'garden_size({self.length}, {self.width}), ' \
-               f'leaves({self.n_yellow}, {self.is_outside()}, {self.n_red})'
+               f'leaves({self.n_yellow}, {self.n_orange}, {self.n_red})'
 
     def __str__(self):
         s = '\n'
