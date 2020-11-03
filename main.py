@@ -2,6 +2,8 @@ from collections import deque
 from tests import *
 import time
 import sys
+
+
 """
     Slovenská Technická Univerzita
     Fakulta Informatiky a Informačných technológií
@@ -34,6 +36,7 @@ def main():
 def timer(function):
     """
     Funkcia na meranie časov algoritmov.
+
     :param function:
     :return:
     """
@@ -50,6 +53,7 @@ def breadth_first_search(start_state):
     """
     Prehľadávanie do šírky. Nájde riešenie
     hlavolamu na minimálny počet ťahov.
+
     :param start_state: začiatočný stav hlavolamu
     :return: najkratšia postupnosť krokov, ktoré dostanú červené auto z križovatky
     """
@@ -89,6 +93,7 @@ def breadth_first_search(start_state):
 def depth_first_search(start_state):
     """
     Prehľadávanie do hĺbky. Nájde riešenie hlavolamu a využije menej pamäte.
+
     :param start_state: začiatočný stav hlavolamu
     :return: postupnosť posunov, ktoré dostanú červené auto z križovatky
     """
@@ -128,6 +133,7 @@ def depth_first_search(start_state):
 def get_path(final_node):
     """
     Zistí postupnosť krokov vedúcich zo začiatočného do cieľového stavu.
+
     :param final_node: Cieľový stav hlavolamu
     :return: postupnosť posunov vozidiel
     """
@@ -148,6 +154,7 @@ def get_move(first_state, second_state):
     """
     Zistí, ktoré vozidlo vykonalo pohyb medzi dvomi stavmi hry
     a zistí aj o akú operáciu sa jedná.
+
     :param first_state: prvý stav
     :param second_state: druhý stav
     :return: vykonaná operácia
