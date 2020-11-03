@@ -24,7 +24,7 @@ class Puzzle:
                f'leaves({len(self.yellow_leaves)}, {len(self.orange_leaves)}, {len(self.red_leaves)})'
 
     def __str__(self):
-        return self.garden.__str__()
+        return str(self.garden)
 
     def load_garden(self, file):
         for y, line in enumerate(file.readlines()):

@@ -16,13 +16,22 @@ class Garden:
         s = '\n'
         for y in range(self.width):
             for x in range(self.length):
-                s += f'{block_repr.get(self.field[y][x], self.field[y][x])}'.rjust(4, ' ')
+                s += f'{block_values.get(self.field[y][x], self.field[y][x])}'.rjust(4, ' ')
             s += '\n'
         return s
 
     def set_parameters(self, width, length, yellow, orange, red):
         self.width, self.length = width, length
         self.n_yellow, self.n_orange, self.n_red = yellow, orange, red
+
+    def load(self, matrix):
+        y, o, r = 0, 0, 0
+        for line in matrix:
+            y += line.count(-2)
+            o += line.count(-3)
+            r += line.count(-4)
+        self.field = matrix
+        self.set_parameters(len(matrix), len(matrix[0]), y, o, r)
 
     def copy(self):
         new_garden = Garden()
@@ -42,4 +51,4 @@ class Garden:
         return self.field[y][x] == 0  # TODO add leaves recognition logic
 
 
-block_repr = {-1: 'K', -2: 'Z', -3: 'O', -4: 'C'}
+block_values = {-1: 'K', -2: 'Z', -3: 'O', -4: 'C'}
