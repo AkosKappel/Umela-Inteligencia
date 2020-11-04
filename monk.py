@@ -1,5 +1,4 @@
 from gene import *
-import random
 
 
 class Monk:
@@ -11,11 +10,8 @@ class Monk:
         self.dead = False
 
     def __repr__(self):
-        return f'fitness({self.fitness}) - ' + ' | '.join([repr(gene) for gene in self.chromosome])
-
-    def __str__(self):
-        return f'Monk fitness({self.fitness})\n{str(self.garden)}\n\t'\
-               + '\n\t'.join([str(i) + ': ' + str(gene) for i, gene in enumerate(self.chromosome)])
+        return f'\nMonk fitness {self.fitness}\n{str(self.garden)}\n\t' + \
+               '\n\t'.join([str(i) + ': ' + str(gene) for i, gene in enumerate(self.chromosome)])
 
     def generate_genes(self, count):
         genes = []
@@ -129,18 +125,25 @@ class Monk:
         child = Monk(self.garden.copy())
 
         if mode == 0:
-            # Dedenie jednej casti genov od jedneho rodica a zvysku genov od druheho
-            # 0000111111
+            # Dedenie jednej casti genov od jedneho rodica a zvysku genov od druheho (napr. 0000111111)
             split = random.randrange(len(self.chromosome) + 1)
             child.chromosome = self.chromosome[:split] + other.chromosome[split:]
         elif mode == 1:
-            # Dedenie nahodnych genov od oboch rodicov
-            # 0110100101
+            # Dedenie nahodnych genov od oboch rodicov (napr. 0110100101)
             for i in range(len(self.chromosome)):
                 child.chromosome.append(random.choice((self.chromosome[i], other.chromosome[i])))
+        elif mode == 2:
+            # Dedenie nahodne dlhych celkov chromozomu od oboch rodicov (napr. 0011110000)
+            base, length = 0, 0
+            new_chromosome = []
+            while length != len(self.chromosome):
+                length += random.randrange(len(self.chromosome) - length) + 1
+                new_chromosome[base:length] = random.choice((self.chromosome[base:length],
+                                                             other.chromosome[base:length]))
+                base = length
+            self.chromosome = new_chromosome
         else:
-            # Dedenie vsetkych genov od jedneho rodica
-            # 0000000000
+            # Dedenie vsetkych genov od jedneho rodica (napr. 0000000000)
             child.chromosome = random.choice((self.chromosome, other.chromosome))
 
         return child
@@ -157,4 +160,5 @@ class Monk:
                     self.chromosome[i] = new_gene
                 else:
                     # Vytvorime nove rotacie v gene
-                    pass  # TODO
+                    gene = self.chromosome[i]
+                    gene.generate_rotations(len(gene.turns))

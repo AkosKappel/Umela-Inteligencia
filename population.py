@@ -13,7 +13,7 @@ class Population:
         self.best = self.monks[0]
 
     def __repr__(self):  # TODO redo stats
-        return f'Gen {self.gen:2d}, Size {self.size}, BestF {self.best.fitness if self.best else 0:3d}, ' \
+        return f'Gen {self.gen:2d}: Size {self.size}, BestF {self.best.fitness if self.best else 0:3d}, ' \
                f'AvgF {self.fitness_sum / self.size:.2f}, MaxF {self.max_fitness:3d}'
 
     def create_monks(self, size):

@@ -32,9 +32,13 @@ class Gene:
             self.dir = directions[3]
             self.pos = (0, 2 * (x + y) - 1 - position)
 
+        # Vygenerujeme rotacie
+        self.generate_rotations(n_rotations)
+
+    def generate_rotations(self, count):
         # Generujeme poradie, v akom sa otacame, ak narazime na prekazku
-        # 1 - otocenie v smere hod. ruciciek
-        # 0 - otocenie v protismere hod. ruciciek
-        n_clockwise_turns = random.randrange(n_rotations + 1)
-        self.turns = [1] * n_clockwise_turns + [0] * (n_rotations - n_clockwise_turns)
+        # 1 - otocenie v smere hodinovych ruciciek
+        # 0 - otocenie v protismere hodinovych ruciciek
+        n_clockwise_turns = random.randrange(count + 1)
+        self.turns = [1] * n_clockwise_turns + [0] * (count - n_clockwise_turns)
         random.shuffle(self.turns)
