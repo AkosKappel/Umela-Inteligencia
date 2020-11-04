@@ -5,55 +5,80 @@ import random
 class Population:
 
     def __init__(self, size, puzzle):
-        self.generation = 1
-        self.size = size
-        self.puzzle = puzzle
+        self.size, self.puzzle = size, puzzle
         self.monks = self.create_monks(size)
+        self.gen = 1
         self.fitness_sum = 0
+        self.max_fitness = sum(row.count(0) for row in puzzle.garden.field)
+        self.best = self.monks[0]
 
-    def __repr__(self):
-        return f'Generation({self.generation}), Fitness_sum({self.fitness_sum})'
-
-    def __str__(self):
-        return f'Generation({self.generation}), Fitness_sum({self.fitness_sum})'  # TODO remake
+    def __repr__(self):  # TODO redo stats
+        return f'Gen {self.gen:2d}, Size {self.size}, BestF {self.best.fitness if self.best else 0:3d}, ' \
+               f'AvgF {self.fitness_sum / self.size:.2f}, MaxF {self.max_fitness:3d}'
 
     def create_monks(self, size):
         n_genes = self.puzzle.garden.width + self.puzzle.garden.length + len(self.puzzle.rocks)
-        return [Monk(self.puzzle.garden.copy(), n_genes) for _ in range(size)]
+        monks = []
+
+        for _ in range(size):
+            monk = Monk(self.puzzle.garden.copy())
+            monk.generate_genes(n_genes)
+            monks.append(monk)
+
+        return monks
 
     def solve_puzzle(self):
         for m in self.monks:
             m.bury_garden()
-        self.calculate_fitness()
-        self.calculate_fitness_sum()
 
-    def show(self):
+    def show_all(self):
         for m in self.monks:
-            print(m.garden, '\n', m)
+            print(m, '\n')
+
+    def show_best(self):
+        print(self.best, '\n')
 
     def calculate_fitness(self):
-        for m in self.monks:
-            m.calculate_fitness()
-
-    def calculate_fitness_sum(self):
+        max_fitness = 0
         self.fitness_sum = 0
+
         for m in self.monks:
-            self.fitness_sum += m.fitness
+            m.calculate_fitness()  # Zistime fitness kazdeho jedinca
+            self.fitness_sum += m.fitness  # Spocitame sucet vsetkych fitness hodnot
+            if m.fitness > max_fitness:  # Najdeme najlepsieho jedinca
+                max_fitness = m.fitness
+                self.best = m
+
+        if self.best.fitness >= self.max_fitness:  # Skontrolujeme, ci je uloha vyriesena
+            self.puzzle.solved = True
 
     def natural_selection(self):
-        new_monks = []
+        self.best.garden.clear()
+        new_monks, new_size = [self.best], 1
 
-        for _ in range(self.size // 2):
+        while new_size < self.size:
             # Vyberieme si 2 rodicov s metodou rulety podla ich fitness
             p1 = self.select_parent()
             p2 = self.select_parent()
 
             # Vytvorime ich deti pomocou krizenia
-            new_monks.append(p1.get_child(p2))
-            new_monks.append(p2.get_child(p1))
+            c1 = p1.crossover(p2)
+            c2 = p2.crossover(p1)
 
-        self.monks = new_monks
-        self.generation += 1
+            # Mutujeme deti s predvolenou pravdepodobnostou
+            c1.mutate()
+            c2.mutate()
+
+            # Pridame deti do nasledujucej generacie
+            new_monks.extend((c1, c2))
+            new_size += 2
+
+        if new_size != self.size:
+            new_monks.pop()
+            new_size -= 1
+
+        self.monks, self.size = new_monks, new_size
+        self.gen += 1
 
     def select_parent(self):
         roulette = random.randrange(self.fitness_sum)
@@ -63,10 +88,4 @@ class Population:
             if temp_sum > roulette:
                 return m
 
-        print("ERROR YOU KNOW WHERE")
         return None  # Toto by sa nikdy nemalo stat
-
-    def mutate_children(self):
-        for m in self.monks:
-            for g in m.genes:
-                g.mutate()

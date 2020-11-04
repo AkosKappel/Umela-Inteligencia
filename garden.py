@@ -1,3 +1,6 @@
+block_values = {-1: 'K', -2: 'Z', -3: 'O', -4: 'C'}
+
+
 class Garden:
 
     def __init__(self):
@@ -36,10 +39,9 @@ class Garden:
     def copy(self):
         new_garden = Garden()
         new_garden.set_parameters(self.width, self.length,
-                                  self.n_yellow, self.n_orange,
-                                  self.n_red)
+                                  self.n_yellow, self.n_orange, self.n_red)
         for row in self.field:
-            new_garden.field.append(row.copy())
+            new_garden.field.append([0 if block > 0 else block for block in row])
         return new_garden
 
     def is_outside(self, x, y):
@@ -50,5 +52,8 @@ class Garden:
             return False
         return self.field[y][x] == 0  # TODO add leaves recognition logic
 
-
-block_values = {-1: 'K', -2: 'Z', -3: 'O', -4: 'C'}
+    def clear(self):
+        for y in range(self.width):
+            for x in range(self.length):
+                if self.field[y][x] > 0:
+                    self.field[y][x] = 0

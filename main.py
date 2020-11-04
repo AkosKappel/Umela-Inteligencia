@@ -1,25 +1,34 @@
 from population import Population
 from puzzle import Puzzle
-import random
 import time
+
 
 if __name__ == "__main__":
     puzzle = Puzzle('example_1.txt')
-    print(puzzle)
+    max_gen = 500
+    start = time.time()
 
-    # start = time.time()
-    population = Population(100, puzzle)
-
-    max_gen = 10
-    while population.generation < max_gen:
-        population.solve_puzzle()
-        print(population)
-        population.natural_selection()
-        population.mutate_children()
+    # Inicializacia prvej generacie
+    population = Population(50, puzzle)
+    population.solve_puzzle()
+    population.calculate_fitness()
     print(population)
 
-    # end = time.time()
-    # print(end - start)
-    # population.show()
-    # print(repr(population))
-    # print(population)
+    while population.gen < max_gen and not puzzle.solved:
+        # Vytvorime novu generaciu
+        population.natural_selection()
+
+        # Pohrabeme zahradu
+        population.solve_puzzle()
+
+        # Vypocitame fitness
+        population.calculate_fitness()
+        print(population)
+
+    population.show_best()
+    end = time.time()
+    print(f'{end - start:.3f} s')
+
+    # TODO pridat predvolene startovacie pozicie
+    # TODO pridaj cislovanie genov (ID) a vypis iba pouzite
+    # TODO pridaj kroky do fitness funkcie

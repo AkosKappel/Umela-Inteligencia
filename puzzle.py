@@ -4,14 +4,15 @@ from garden import Garden
 class Puzzle:
 
     block_types = {
-        'K': -1,  # Immovable obstacle
-        'Z': -2,  # Yellow leaf
-        'O': -3,  # Orange leaf
-        'C': -4   # Red leaf
+        'K': -1,  # Kamene
+        'Z': -2,  # Zlte listy
+        'O': -3,  # Oranzove listy
+        'C': -4   # Cervene listy
     }
 
     def __init__(self, file_name):
         self.garden = Garden()
+        self.solved = False
         self.rocks = []
         self.yellow_leaves = []
         self.orange_leaves = []
@@ -48,9 +49,7 @@ class Puzzle:
             self.red_leaves.append((x, y))
 
     def reset_garden(self):
-        for y in range(self.garden.width):
-            for x in range(self.garden.length):
-                self.garden.field[y][x] = 0
+        self.garden.clear()
         for x, y in self.rocks:
             self.garden.field[y][x] = -1
         for x, y in self.yellow_leaves:

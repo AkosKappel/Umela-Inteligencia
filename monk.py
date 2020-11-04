@@ -1,27 +1,36 @@
-from gene import Gene
+from gene import *
+import random
 
 
 class Monk:
 
-    def __init__(self, garden, gene_count=0):
+    def __init__(self, garden):
         self.garden = garden
-        self.genes = []
-        for _ in range(gene_count):
-            gene = Gene()
-            gene.randomize(garden.length, garden.width)
-            self.genes.append(gene)
+        self.chromosome = []
         self.fitness = 0
         self.dead = False
 
     def __repr__(self):
-        return f'fitness({self.fitness}) - ' + ' | '.join([repr(gene) for gene in self.genes])
+        return f'fitness({self.fitness}) - ' + ' | '.join([repr(gene) for gene in self.chromosome])
 
     def __str__(self):
-        return f'Monk: fitness({self.fitness})\n\t' + '\n\t'.join([str(gene) for gene in self.genes])
+        return f'Monk fitness({self.fitness})\n{str(self.garden)}\n\t'\
+               + '\n\t'.join([str(i) + ': ' + str(gene) for i, gene in enumerate(self.chromosome)])
 
-    def bury_garden(self, show_moves=False):
+    def generate_genes(self, count):
+        genes = []
+
+        for _ in range(count):
+            gene = Gene()
+            gene.randomize(self.garden.length, self.garden.width)
+            genes.append(gene)
+
+        self.chromosome = genes
+
+    def bury_garden(self):
         n_moves = 0
-        for i, gene in enumerate(self.genes):
+
+        for i, gene in enumerate(self.chromosome):
             if self.dead:  # Mnich sa zasekol v strede zahrady
                 break
 
@@ -33,32 +42,30 @@ class Monk:
             turn_index = 0
             n_moves += 1
             while True:
-                self.garden.field[y][x] = n_moves  # Vykoname pohyb
+                self.garden.field[y][x] = n_moves  # Vykoname pohyb dopredu
                 x, y = self.move(x, y, d)
 
-                if self.garden.is_outside(x, y):  # Mimo zahrady ... ideme na dalsi gen
+                if self.garden.is_outside(x, y):  # Dostali sme sa von zo zahrady a ideme na dalsi gen
                     break
-                if self.garden.empty(x, y):  # Pokracujeme rovno v ceste
+                if self.garden.empty(x, y):  # Pokracujeme dalej rovno v ceste
                     continue
 
-                x, y = self.move(x, y, d, forward=False)  # Vratime sa o 1 policko
+                x, y = self.move(x, y, d, forward=False)  # Ak je na ceste prekazka vratime sa o 1 policko
                 d = self.turn(x, y, d, gene.turns[turn_index])  # Zmenime smer pohybu
 
                 turn_index += 1
                 turn_index %= len(gene.turns)
-                if d is None:
+                if d is None:  # Zasekli sme sa v strede zahrady
+                    self.dead = True
                     break
-            if show_moves:
-                print(i, gene)
-                print(self.garden)
 
     @staticmethod
     def move(x, y, d, forward=True):
-        if d == Gene.directions[0]:
+        if d == directions[0]:
             y = y + 1 if forward else y - 1  # dole
-        elif d == Gene.directions[1]:
+        elif d == directions[1]:
             x = x - 1 if forward else x + 1  # dolava
-        elif d == Gene.directions[2]:
+        elif d == directions[2]:
             y = y - 1 if forward else y + 1  # hore
         else:
             x = x + 1 if forward else x - 1  # doprava
@@ -66,49 +73,49 @@ class Monk:
 
     def turn(self, x, y, d, clockwise):
         # Ak je pohyb mnicha vertikalny, tak ho zmenime na horizontalny
-        if d in Gene.directions[0::2]:
+        if d in directions[0::2]:
             return self.turn_horizontal(d, clockwise, self.garden.empty(x - 1, y) or x - 1 == -1,
                                         self.garden.empty(x + 1, y) or x + 1 == self.garden.length)
         else:  # A ak je horizontalny, tak ho zmenime na vertikalny
             return self.turn_vertical(d, clockwise, self.garden.empty(x, y - 1) or y - 1 == -1,
                                       self.garden.empty(x, y + 1) or y + 1 == self.garden.width)
 
-    def turn_horizontal(self, d, clockwise, can_go_left, can_go_right):
+    @staticmethod
+    def turn_horizontal(d, clockwise, can_go_left, can_go_right):
         if can_go_right and can_go_left:
             if clockwise:
-                if d == Gene.directions[0]:
-                    return Gene.directions[1]
+                if d == directions[0]:
+                    return directions[1]
                 else:
-                    return Gene.directions[3]
+                    return directions[3]
             else:
-                if d == Gene.directions[0]:
-                    return Gene.directions[3]
+                if d == directions[0]:
+                    return directions[3]
                 else:
-                    return Gene.directions[1]
+                    return directions[1]
         elif can_go_right:
-            return Gene.directions[3]
+            return directions[3]
         elif can_go_left:
-            return Gene.directions[1]
-        self.dead = True
+            return directions[1]
         return None
 
-    def turn_vertical(self, d, clockwise, can_go_up, can_go_down):
+    @staticmethod
+    def turn_vertical(d, clockwise, can_go_up, can_go_down):
         if can_go_up and can_go_down:
             if clockwise:
-                if d == Gene.directions[1]:
-                    return Gene.directions[2]
+                if d == directions[1]:
+                    return directions[2]
                 else:
-                    return Gene.directions[0]
+                    return directions[0]
             else:
-                if d == Gene.directions[1]:
-                    return Gene.directions[0]
+                if d == directions[1]:
+                    return directions[0]
                 else:
-                    return Gene.directions[2]
+                    return directions[2]
         elif can_go_up:
-            return Gene.directions[2]
+            return directions[2]
         elif can_go_down:
-            return Gene.directions[0]
-        self.dead = True
+            return directions[0]
         return None
 
     def calculate_fitness(self):
@@ -118,8 +125,36 @@ class Monk:
                 if block > 0:
                     self.fitness += 1
 
-    def get_child(self, other):
-        baby = Monk(self.garden.copy())
-        for i in range(len(self.genes)):
-            baby.genes.append(self.genes[i].crossover(other.genes[i]))
-        return baby
+    def crossover(self, other, mode=0):
+        child = Monk(self.garden.copy())
+
+        if mode == 0:
+            # Dedenie jednej casti genov od jedneho rodica a zvysku genov od druheho
+            # 0000111111
+            split = random.randrange(len(self.chromosome) + 1)
+            child.chromosome = self.chromosome[:split] + other.chromosome[split:]
+        elif mode == 1:
+            # Dedenie nahodnych genov od oboch rodicov
+            # 0110100101
+            for i in range(len(self.chromosome)):
+                child.chromosome.append(random.choice((self.chromosome[i], other.chromosome[i])))
+        else:
+            # Dedenie vsetkych genov od jedneho rodica
+            # 0000000000
+            child.chromosome = random.choice((self.chromosome, other.chromosome))
+
+        return child
+
+    def mutate(self, mutation_rate=0.05, mode=0):
+        for i in range(len(self.chromosome)):
+            rand = random.random()
+
+            if rand < mutation_rate:
+                if mode == 0:
+                    # Vytvorime novy gen
+                    new_gene = Gene()
+                    new_gene.randomize(self.garden.length, self.garden.width)
+                    self.chromosome[i] = new_gene
+                else:
+                    # Vytvorime nove rotacie v gene
+                    pass  # TODO
