@@ -5,11 +5,11 @@ import time
 
 if __name__ == "__main__":
     puzzle = Puzzle('example_1.txt')
-    max_gen = 500
+    max_gen = 700
     start = time.time()
 
     # Inicializacia prvej generacie
-    population = Population(50, puzzle)
+    population = Population(100, puzzle)
     population.solve_puzzle()
     population.calculate_fitness()
     print(population)
@@ -30,4 +30,4 @@ if __name__ == "__main__":
     print(f'{end - start:.3f} s')
 
     # TODO pridaj cislovanie genov (ID) a vypis iba pouzite
-    # TODO pridaj kroky do fitness funkcie
+    # TODO pridaj kroky a is_dead do fitness funkcie
