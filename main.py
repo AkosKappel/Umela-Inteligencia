@@ -29,6 +29,5 @@ if __name__ == "__main__":
     end = time.time()
     print(f'{end - start:.3f} s')
 
-    # TODO pridat predvolene startovacie pozicie
     # TODO pridaj cislovanie genov (ID) a vypis iba pouzite
     # TODO pridaj kroky do fitness funkcie

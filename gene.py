@@ -10,9 +10,10 @@ class Gene:
     def __repr__(self):
         return f'{self.pos}, {self.dir}, {self.turns}'
 
-    def randomize(self, x, y, n_rotations=6):
+    def randomize(self, x, y, position=None, n_rotations=6):
         random.seed()
-        position = random.randrange(2 * (x + y))
+        if not position:
+            position = random.randrange(2 * (x + y))
 
         # Vygenerujeme suradnice zaciatocnej pozicie a smer pohybu
         if 0 <= position < x:

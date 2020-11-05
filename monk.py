@@ -15,10 +15,12 @@ class Monk:
 
     def generate_genes(self, count):
         genes = []
+        x, y = self.garden.length, self.garden.width
+        positions = random.sample(range(2 * (x + y)), count)
 
         for _ in range(count):
             gene = Gene()
-            gene.randomize(self.garden.length, self.garden.width)
+            gene.randomize(x, y, position=positions.pop())
             genes.append(gene)
 
         self.chromosome = genes
