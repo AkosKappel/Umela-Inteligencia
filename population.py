@@ -10,6 +10,7 @@ class Population:
         self.gen = 1
         self.fitness_sum = 0
         self.max_fitness = sum(row.count(0) for row in puzzle.garden.field)
+        self.max_fitness += puzzle.garden.n_yellow + puzzle.garden.n_orange + puzzle.garden.n_red
         self.best = self.monks[0]
 
     def __repr__(self):  # TODO redo stats

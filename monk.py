@@ -7,6 +7,7 @@ class Monk:
         self.garden = garden
         self.chromosome = []
         self.fitness = 0
+        self.n_collected = 0
         self.dead = False
 
     def __repr__(self):
@@ -46,6 +47,9 @@ class Monk:
                 if self.garden.is_outside(x, y):  # Dostali sme sa von zo zahrady a ideme na dalsi gen
                     break
                 if self.garden.empty(x, y):  # Pokracujeme dalej rovno v ceste
+                    continue
+                if self.collectable(x, y):  # Ak mozme, tak pozbierame list a pokracujeme v ceste
+                    self.n_collected += 1
                     continue
 
                 x, y = self.move(x, y, d, forward=False)  # Ak je na ceste prekazka vratime sa o 1 policko
@@ -115,6 +119,17 @@ class Monk:
         elif can_go_down:
             return directions[0]
         return None
+
+    def collectable(self, x, y):
+        if not self.garden.is_leaf(x, y):
+            return False
+
+        block = self.garden.field[y][x]
+        y, o, r = self.garden.n_yellow, self.garden.n_orange, self.garden.n_red
+
+        return (block == -2 and self.n_collected < y) or \
+               (block == -3 and y <= self.n_collected < y + o) or \
+               (block == -4 and y + o <= self.n_collected < y + o + r)
 
     def calculate_fitness(self):
         self.fitness = 0

@@ -1,4 +1,4 @@
-block_values = {-1: 'K', -2: 'Z', -3: 'O', -4: 'C'}
+blocks = {-1: 'K', -2: 'Z', -3: 'O', -4: 'C'}
 
 
 class Garden:
@@ -19,7 +19,7 @@ class Garden:
         s = '\n'
         for y in range(self.width):
             for x in range(self.length):
-                s += f'{block_values.get(self.field[y][x], self.field[y][x])}'.rjust(4, ' ')
+                s += f'{blocks.get(self.field[y][x], self.field[y][x])}'.rjust(4, ' ')
             s += '\n'
         return s
 
@@ -47,10 +47,15 @@ class Garden:
     def is_outside(self, x, y):
         return x < 0 or x >= self.length or y < 0 or y >= self.width
 
+    def is_leaf(self, x, y):
+        if self.is_outside(x, y):
+            return False
+        return self.field[y][x] != -1 and self.field[y][x] in blocks.keys()
+
     def empty(self, x, y):
         if self.is_outside(x, y):
             return False
-        return self.field[y][x] == 0  # TODO add leaves recognition logic
+        return self.field[y][x] == 0
 
     def clear(self):
         for y in range(self.width):
