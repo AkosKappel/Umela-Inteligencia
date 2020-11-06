@@ -8,11 +8,12 @@ class Monk:
         self.chromosome = []
         self.fitness = 0
         self.n_collected = 0
+        self.used_genes = []
         self.dead = False
 
     def __repr__(self):
-        return f'\nMonk fitness {self.fitness}\n{str(self.garden)}\n\t' + \
-               '\n\t'.join([str(i) + ': ' + str(gene) for i, gene in enumerate(self.chromosome)])
+        return f'{str(self.garden)}\nMonk - fitness {self.fitness}, genes {len(self.chromosome)}\n\t' + \
+               '\n\t'.join([str(i + 1) + ': ' + str(gene) for i, gene in enumerate(self.used_genes)])
 
     def generate_genes(self, count):
         genes = []
@@ -38,6 +39,7 @@ class Monk:
             if not self.garden.empty(x, y):  # Nie je mozne vsupit do zahrady
                 continue
 
+            self.used_genes.append(gene)
             turn_index = 0
             n_moves += 1
             while True:

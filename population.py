@@ -1,5 +1,4 @@
-from monk import Monk
-import random
+from monk import *
 
 
 class Population:
