@@ -53,8 +53,10 @@ class Population:
             self.puzzle.solved = True
 
     def natural_selection(self):
-        self.best.garden.clear()
-        new_monks, new_size = [self.best], 1
+        # Elitarizmus = najlepsi jedinec prechadza do dalsej generacie bez mutacie
+        best_monk = Monk(self.puzzle.garden.copy())
+        best_monk.chromosome = self.best.chromosome
+        new_monks, new_size = [best_monk], 1
 
         while new_size < self.size:
             # Vyberieme si 2 rodicov s metodou rulety podla ich fitness
@@ -76,6 +78,12 @@ class Population:
         if new_size != self.size:
             new_monks.pop()
             new_size -= 1
+
+        # Pridame novu krv do novej generacie
+        n_new_blood = int(0.15 * self.size)
+        for _ in range(n_new_blood):
+            new_monks.pop()
+        new_monks += self.create_monks(n_new_blood)
 
         self.monks, self.size = new_monks, new_size
         self.gen += 1

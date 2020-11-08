@@ -4,8 +4,8 @@ import time
 
 
 if __name__ == "__main__":
-    puzzle = Puzzle('example_2.txt')
-    max_gen = 70
+    puzzle = Puzzle('example_1.txt')
+    max_gen = 500
 
     # Inicializacia prvej generacie
     population = Population(100, puzzle)

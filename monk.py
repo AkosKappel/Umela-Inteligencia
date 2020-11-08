@@ -161,29 +161,31 @@ class Monk:
                                                              other.chromosome[base:length]))
                 base = length
             child.chromosome = new_chromosome
-        else:
+        elif mode == 3:
             # Dedenie vsetkych genov od jedneho rodica (napr. 0000000000)
             child.chromosome = random.choice((self.chromosome, other.chromosome))
-            # Vysoka pravdepodobnost mutacie
-            child.mutate(0.35)
+            # Ziadne krizenie iba mutacia
+            child.mutate(1.00)
 
         return child
 
-    def mutate(self, mutation_rate=0.05, mode=0):
+    def mutate(self, mutation_rate=0.05, mode=1):
+        if mode == 0:
+            # Vytvorime cely chromozom s novymi genmi
+            if random.random() < mutation_rate:
+                self.generate_genes(len(self.chromosome))
+            return
+
         for i in range(len(self.chromosome)):
             rand = random.random()
 
             if rand < mutation_rate:
-                if mode == 0:
+                if mode == 1:
                     # Vytvorime novy gen
                     new_gene = Gene()
                     new_gene.randomize(self.garden.length, self.garden.width)
                     self.chromosome[i] = new_gene
-                elif mode == 1:
-                    # Vytvorime cely chromozom s novymi genmi
-                    self.generate_genes(len(self.chromosome))
-                    break
-                else:
+                elif mode == 2:
                     # Vytvorime nove rotacie v gene
                     gene = self.chromosome[i]
                     gene.generate_rotations(len(gene.turns))
