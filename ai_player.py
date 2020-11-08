@@ -294,7 +294,7 @@ class Monk:
 
         return child
 
-    def mutate(self, mutation_rate=0.05, mode=1):
+    def mutate(self, mutation_rate=0.05, mode=2):
         """
         Mutacia jedinca.
 
@@ -302,22 +302,28 @@ class Monk:
         :param mode: sposob mutacie (0, 1, 2)
         :return: None
         """
+        rand = random.random()
         if mode == 0:
             # Vytvorime cely chromozom s novymi genmi
-            if random.random() < mutation_rate:
+            if rand < mutation_rate:
                 self.generate_genes(len(self.chromosome))
+            return
+        elif mode == 1:
+            # Zamenime poradie genov v chromozome
+            if rand < mutation_rate:
+                random.shuffle(self.chromosome)
             return
 
         for i in range(len(self.chromosome)):
             rand = random.random()
 
             if rand < mutation_rate:
-                if mode == 1:
+                if mode == 2:
                     # Vytvorime novy gen
                     new_gene = Gene()
                     new_gene.randomize(self.garden.length, self.garden.width)
                     self.chromosome[i] = new_gene
-                elif mode == 2:
+                elif mode == 3:
                     # Vytvorime nove rotacie v gene
                     gene = self.chromosome[i]
                     gene.generate_rotations(len(gene.turns))
