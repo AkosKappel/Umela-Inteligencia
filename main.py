@@ -1,5 +1,5 @@
-from population import Population
-from puzzle import Puzzle
+from ai_player import Population
+from zen_garden import Puzzle
 import time
 
 
