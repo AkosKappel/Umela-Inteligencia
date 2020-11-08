@@ -1,5 +1,5 @@
 import random
-directions = ('down', 'left', 'up', 'right')
+directions = ('down', 'left', 'up', 'right')  # Vsetky mozne smery pohybu po zahrade
 
 
 class Population:
@@ -18,6 +18,12 @@ class Population:
                f'AvgF {self.fitness_sum / self.size:.2f}, MaxF {self.max_fitness:3d}'
 
     def create_monks(self, size):
+        """
+        Vytvori populaciu s danym poctom jedincov.
+
+        :param size: mnozstvo jedincov
+        :return: zoznam jedincov
+        """
         n_genes = self.puzzle.garden.width + self.puzzle.garden.length + len(self.puzzle.rocks)
         monks = []
 
@@ -28,18 +34,24 @@ class Population:
 
         return monks
 
-    def solve_puzzle(self):
+    def solve_puzzle(self):  # Kazdy mnich pohrabe zahradu
         for m in self.monks:
             m.bury_garden()
 
-    def show_all(self):
+    def show_all(self):  # Vypis vsetkych mnichov v aktualnej populacii
         for m in self.monks:
             print(m, '\n')
 
-    def show_best(self):
+    def show_best(self):  # Vypis najlepsieho mnicha v aktualnej populacii
         print(self.best, '\n')
 
     def calculate_fitness(self):
+        """
+        Vypocita fitnes kazdeho jedinca, zisti celkovu fitnes populacie
+        a urci najlepsieho jedinca v aktualnej generacii.
+
+        :return: None
+        """
         max_fitness = 0
         self.fitness_sum = 0
 
@@ -81,7 +93,7 @@ class Population:
             new_size -= 1
 
         # Pridame novu krv do novej generacie
-        n_new_blood = int(0.15 * self.size)
+        n_new_blood = int(0.20 * self.size)
         for _ in range(n_new_blood):
             new_monks.pop()
         new_monks += self.create_monks(n_new_blood)
@@ -115,6 +127,12 @@ class Monk:
                '\n\t'.join([str(i + 1) + ': ' + str(gene) for i, gene in enumerate(self.used_genes)])
 
     def generate_genes(self, count):
+        """
+        Vytvori novy chromozom s danym poctom genov.
+
+        :param count: pocet genov
+        :return: None
+        """
         genes = []
         x, y = self.garden.length, self.garden.width
         positions = random.sample(range(2 * (x + y)), count)
@@ -222,17 +240,18 @@ class Monk:
         return None
 
     def collectable(self, x, y):
-        if not self.garden.is_leaf(x, y):
+        if not self.garden.is_leaf(x, y):  # Skontrolujeme, ci dane policko obsahuje list
             return False
 
         block = self.garden.field[y][x]
         y, o, r = self.garden.n_yellow, self.garden.n_orange, self.garden.n_red
 
+        # Zistime, ci mozeme pozbierat list na danom policku
         return (block == -2 and self.n_collected < y) or \
                (block == -3 and y <= self.n_collected < y + o) or \
                (block == -4 and y + o <= self.n_collected < y + o + r)
 
-    def calculate_fitness(self):
+    def calculate_fitness(self):  # Vypocet fitnes mnicha
         self.fitness = 0
         for line in self.garden.field:
             for block in line:
@@ -240,6 +259,13 @@ class Monk:
                     self.fitness += 1
 
     def crossover(self, other, mode=0):
+        """
+        Krizenie jedincov.
+
+        :param other: druhy jedinec
+        :param mode: sposob krizenia (0, 1, 2, 3)
+        :return: novy jedinec
+        """
         child = Monk(self.garden.copy())
 
         if mode == 0:
@@ -269,6 +295,13 @@ class Monk:
         return child
 
     def mutate(self, mutation_rate=0.05, mode=1):
+        """
+        Mutacia jedinca.
+
+        :param mutation_rate: pravdepodobnost mutacie
+        :param mode: sposob mutacie (0, 1, 2)
+        :return: None
+        """
         if mode == 0:
             # Vytvorime cely chromozom s novymi genmi
             if random.random() < mutation_rate:
@@ -299,6 +332,15 @@ class Gene:
         return f'{self.pos}, {self.dir}, {self.turns}'
 
     def randomize(self, x, y, position=None, n_rotations=6):
+        """
+        Vytvorenie nahodneho genu.
+
+        :param x: dlzka zahrady
+        :param y: vyska zahrady
+        :param position: zaciatocna pozicia
+        :param n_rotations: pocet otacani
+        :return: None
+        """
         random.seed()
         if not position:
             position = random.randrange(2 * (x + y))
@@ -325,7 +367,7 @@ class Gene:
         self.generate_rotations(n_rotations)
 
     def generate_rotations(self, count):
-        # Generujeme poradie, v akom sa otacame, ak narazime na prekazku
+        # Generujeme poradie, v akom sa otacame ak narazime na prekazku
         # 1 - otocenie v smere hodinovych ruciciek
         # 0 - otocenie v protismere hodinovych ruciciek
         n_clockwise_turns = random.randrange(count + 1)

@@ -5,7 +5,7 @@ import time
 
 if __name__ == "__main__":
     puzzle = Puzzle('example_1.txt')
-    max_gen = 500
+    max_gen = 300
 
     # Inicializacia prvej generacie
     population = Population(100, puzzle)
@@ -33,3 +33,4 @@ if __name__ == "__main__":
     print(f'{end - start:.3f} s')
 
     # TODO pridaj kroky a is_dead do fitness funkcie
+    # TODO zabezpec neopakujuce sa geny
