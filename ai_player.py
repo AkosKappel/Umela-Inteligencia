@@ -71,6 +71,10 @@ class Population:
         best_monk.chromosome = self.best.chromosome
         new_monks, new_size = [best_monk], 1
 
+        # Pridame novu krv do novej generacie
+        n_new_blood = int(0.15 * self.size)
+        new_monks += self.create_monks(n_new_blood)
+
         while new_size < self.size:
             # Vyberieme si 2 rodicov s metodou rulety podla ich fitness
             p1 = self.select_parent()
@@ -91,12 +95,6 @@ class Population:
         if new_size != self.size:
             new_monks.pop()
             new_size -= 1
-
-        # Pridame novu krv do novej generacie
-        n_new_blood = int(0.20 * self.size)
-        for _ in range(n_new_blood):
-            new_monks.pop()
-        new_monks += self.create_monks(n_new_blood)
 
         self.monks, self.size = new_monks, new_size
         self.gen += 1
@@ -294,39 +292,35 @@ class Monk:
 
         return child
 
-    def mutate(self, mutation_rate=0.05, mode=2):
+    def mutate(self, mutation_rate=0.05, mode=0):
         """
         Mutacia jedinca.
 
         :param mutation_rate: pravdepodobnost mutacie
-        :param mode: sposob mutacie (0, 1, 2)
+        :param mode: sposob mutacie (0, 1, 2, 3)
         :return: None
         """
-        rand = random.random()
         if mode == 0:
-            # Vytvorime cely chromozom s novymi genmi
-            if rand < mutation_rate:
-                self.generate_genes(len(self.chromosome))
-            return
-        elif mode == 1:
-            # Zamenime poradie genov v chromozome
-            if rand < mutation_rate:
-                random.shuffle(self.chromosome)
-            return
-
-        for i in range(len(self.chromosome)):
-            rand = random.random()
-
-            if rand < mutation_rate:
-                if mode == 2:
-                    # Vytvorime novy gen
+            # Vytvorime novy gen
+            for i in range(len(self.chromosome)):
+                if random.random() < mutation_rate:
                     new_gene = Gene()
                     new_gene.randomize(self.garden.length, self.garden.width)
                     self.chromosome[i] = new_gene
-                elif mode == 3:
-                    # Vytvorime nove rotacie v gene
+        elif mode == 1:
+            # Vytvorime nove rotacie v gene
+            for i in range(len(self.chromosome)):
+                if random.random() < mutation_rate:
                     gene = self.chromosome[i]
                     gene.generate_rotations(len(gene.turns))
+        elif mode == 2:
+            # Vytvorime cely chromozom s novymi genmi
+            if random.random() < mutation_rate:
+                self.generate_genes(len(self.chromosome))
+        elif mode == 3:
+            # Zamenime poradie genov v chromozome
+            if random.random() < mutation_rate:
+                random.shuffle(self.chromosome)
 
 
 class Gene:
