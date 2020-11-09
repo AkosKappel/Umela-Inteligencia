@@ -9,9 +9,9 @@ class Population:
         self.monks = self.create_monks(size)
         self.gen = 1
         self.fitness_sum = 0
+        self.best = self.monks[0]
         self.max_fitness = sum(row.count(0) for row in puzzle.garden.field)
         self.max_fitness += puzzle.garden.n_yellow + puzzle.garden.n_orange + puzzle.garden.n_red
-        self.best = self.monks[0]
 
     def __repr__(self):  # TODO redo stats
         return f'Gen {self.gen:2d}: Size {self.size}, BestF {self.best.fitness if self.best else 0:3d}, ' \
@@ -24,11 +24,12 @@ class Population:
         :param size: mnozstvo jedincov
         :return: zoznam jedincov
         """
-        n_genes = self.puzzle.garden.width + self.puzzle.garden.length + len(self.puzzle.rocks)
         monks = []
+        garden = self.puzzle.garden
+        n_genes = garden.width + garden.length + len(self.puzzle.rocks)
 
         for _ in range(size):
-            monk = Monk(self.puzzle.garden.copy())
+            monk = Monk(garden.copy())
             monk.generate_genes(n_genes)
             monks.append(monk)
 
@@ -72,7 +73,7 @@ class Population:
         new_monks, new_size = [best_monk], 1
 
         # Pridame novu krv do novej generacie
-        n_new_blood = int(0.15 * self.size)
+        n_new_blood = int(0.10 * self.size)
         new_monks += self.create_monks(n_new_blood)
 
         while new_size < self.size:
@@ -116,7 +117,7 @@ class Monk:
         self.garden = garden
         self.chromosome = []
         self.fitness = 0
-        self.n_collected = 0
+        self.n_collected = 0  # Pocet pozbieranych listov
         self.used_genes = []
         self.dead = False
 
@@ -143,6 +144,11 @@ class Monk:
         self.chromosome = genes
 
     def bury_garden(self):
+        """
+        Hlavna funkcia na pohrabanie zahrady.
+
+        :return: None
+        """
         n_moves = 0
 
         for i, gene in enumerate(self.chromosome):
@@ -238,6 +244,13 @@ class Monk:
         return None
 
     def collectable(self, x, y):
+        """
+        Zisti, ci sa na policku nachadza list a ci ho moze zobrat.
+
+        :param x: x-ova suradnica policka
+        :param y: y-ova suradnica policka
+        :return: True ak list mozme zobrat, inak False
+        """
         if not self.garden.is_leaf(x, y):  # Skontrolujeme, ci dane policko obsahuje list
             return False
 
@@ -249,7 +262,12 @@ class Monk:
                (block == -3 and y <= self.n_collected < y + o) or \
                (block == -4 and y + o <= self.n_collected < y + o + r)
 
-    def calculate_fitness(self):  # Vypocet fitnes mnicha
+    def calculate_fitness(self):
+        """
+        Vypocita fitnes hodnotu jedinca.
+
+        :return: None
+        """
         self.fitness = 0
         for line in self.garden.field:
             for block in line:
@@ -301,7 +319,7 @@ class Monk:
         :return: None
         """
         if mode == 0:
-            # Vytvorime novy gen
+            # Niektore geny zmenime na nove
             for i in range(len(self.chromosome)):
                 if random.random() < mutation_rate:
                     new_gene = Gene()
