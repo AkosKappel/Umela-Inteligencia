@@ -314,6 +314,7 @@ class Monk:
             # Ziadne krizenie iba mutacia
             child.mutate(1.00)
 
+        # TODO zbavit sa rovnakych genov
         return child
 
     def mutate(self, mutation_rate=0.05, mode=0):
@@ -328,14 +329,17 @@ class Monk:
             # Niektore geny zmenime na nove
             for i in range(len(self.chromosome)):
                 if random.random() < mutation_rate:
-                    new_gene = Gene()
+                    new_gene = Gene()  # TODO vygeneruj taky gen, ktory nie je v chromozome
+                    while new_gene in self.chromosome:
+                        new_gene = Gene()
+                        # print('AAA')
                     self.chromosome[i] = new_gene
         elif mode == 1:
-            # Vytvorime nove rotacie v gene
+            # Vytvorime nove rotacie v niektorych genoch
             for i in range(len(self.chromosome)):
                 if random.random() < mutation_rate:
                     gene = self.chromosome[i]
-                    gene.generate_turns(len(gene.turns))
+                    gene.turns = gene.generate_turns(len(gene.turns))
         elif mode == 2:
             # Vytvorime cely chromozom s novymi genmi
             if random.random() < mutation_rate:
