@@ -1,8 +1,14 @@
-blocks = {-1: 'K', -2: 'Z', -3: 'O', -4: 'C'}  # Reprezentacia blokov pri vypisovani
+blocks = {  # Reprezentacia blokov pri vypisovani zahrady
+    -1: '\33[30mK\33[0m',
+    -2: '\33[93mZ\33[0m',
+    -3: '\33[33mO\33[0m',
+    -4: '\33[31mC\33[0m'
+}
 
 
 class Puzzle:
 
+    # Reprezentacia blokov pri nacitavani zahrady z textoveho suboru
     block_types = {
         'K': -1,  # Kamene
         'Z': -2,  # Zlte listy
@@ -88,7 +94,10 @@ class Garden:
         s = '\n'
         for y in range(self.width):
             for x in range(self.length):
-                s += f'{blocks.get(self.field[y][x], self.field[y][x])}'.rjust(4, ' ')
+                if self.field[y][x] in blocks.keys():
+                    s += f'   {blocks.get(self.field[y][x])}'
+                else:
+                    s += f'{self.field[y][x]}'.rjust(4, ' ')
             s += '\n'
         return s
 

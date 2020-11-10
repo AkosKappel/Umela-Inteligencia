@@ -1,23 +1,28 @@
 import random
 directions = ('down', 'left', 'up', 'right')  # Vsetky mozne smery pohybu po zahrade
+positions_map = {}
 
 
 class Population:
 
+    puzzle = None
+
     def __init__(self, size, puzzle):
-        self.size, self.puzzle = size, puzzle
+        self.size, Population.puzzle = size, puzzle
+        Gene.create_mapping(puzzle.garden.length, puzzle.garden.width)
         self.monks = self.create_monks(size)
         self.gen = 1
-        self.fitness_sum = 0
-        self.best = self.monks[0]
+        self.total_fitness = 0
+        self.best, self.worst = self.monks[0], self.monks[-1]
         self.max_fitness = sum(row.count(0) for row in puzzle.garden.field)
         self.max_fitness += puzzle.garden.n_yellow + puzzle.garden.n_orange + puzzle.garden.n_red
 
     def __repr__(self):  # TODO redo stats
         return f'Gen {self.gen:2d}: Size {self.size}, BestF {self.best.fitness if self.best else 0:3d}, ' \
-               f'AvgF {self.fitness_sum / self.size:.2f}, MaxF {self.max_fitness:3d}'
+               f'AvgF {self.total_fitness / self.size:.2f}, MaxF {self.max_fitness:3d}'
 
-    def create_monks(self, size):
+    @staticmethod
+    def create_monks(size):
         """
         Vytvori populaciu s danym poctom jedincov.
 
@@ -25,19 +30,19 @@ class Population:
         :return: zoznam jedincov
         """
         monks = []
-        garden = self.puzzle.garden
-        n_genes = garden.width + garden.length + len(self.puzzle.rocks)
+        garden = Population.puzzle.garden
+        n = garden.width + garden.length + len(Population.puzzle.rocks)
 
         for _ in range(size):
             monk = Monk(garden.copy())
-            monk.generate_genes(n_genes)
+            monk.chromosome = monk.generate_genes(n)
             monks.append(monk)
 
         return monks
 
     def solve_puzzle(self):  # Kazdy mnich pohrabe zahradu
         for m in self.monks:
-            m.bury_garden()
+            m.solve()
 
     def show_all(self):  # Vypis vsetkych mnichov v aktualnej populacii
         for m in self.monks:
@@ -49,28 +54,35 @@ class Population:
     def calculate_fitness(self):
         """
         Vypocita fitnes kazdeho jedinca, zisti celkovu fitnes populacie
-        a urci najlepsieho jedinca v aktualnej generacii.
+        a urci najlepsieho a najhorsieho jedinca v aktualnej generacii.
 
         :return: None
         """
+        min_fitness = self.max_fitness
         max_fitness = 0
-        self.fitness_sum = 0
+        self.total_fitness = 0
 
         for m in self.monks:
             m.calculate_fitness()  # Zistime fitness kazdeho jedinca
-            self.fitness_sum += m.fitness  # Spocitame sucet vsetkych fitness hodnot
+            self.total_fitness += m.fitness  # Spocitame sucet vsetkych fitness hodnot
+
             if m.fitness > max_fitness:  # Najdeme najlepsieho jedinca
                 max_fitness = m.fitness
                 self.best = m
 
+            if m.fitness < min_fitness:  # Najdeme najhorsieho jedinca
+                min_fitness = m.fitness
+                self.worst = m
+
+        # TODO monk must be alive for solution
         if self.best.fitness >= self.max_fitness:  # Skontrolujeme, ci je uloha vyriesena
-            self.puzzle.solved = True
+            Population.puzzle.solved = True
 
     def natural_selection(self):
         # Elitarizmus = najlepsi jedinec prechadza do dalsej generacie bez mutacie
-        best_monk = Monk(self.puzzle.garden.copy())
+        best_monk = Monk(Population.puzzle.garden.copy())
         best_monk.chromosome = self.best.chromosome
-        new_monks, new_size = [best_monk], 1
+        new_monks, new_size = [best_monk], 1  # TODO remove elitarism ?
 
         # Pridame novu krv do novej generacie
         n_new_blood = int(0.10 * self.size)
@@ -101,7 +113,7 @@ class Population:
         self.gen += 1
 
     def select_parent(self):
-        roulette = random.randrange(self.fitness_sum)
+        roulette = random.randrange(self.total_fitness)
         temp_sum = 0  # Stochasticky vyber (ruleta)
         for m in self.monks:
             temp_sum += m.fitness
@@ -132,18 +144,10 @@ class Monk:
         :param count: pocet genov
         :return: None
         """
-        genes = []
-        x, y = self.garden.length, self.garden.width
-        positions = random.sample(range(2 * (x + y)), count)
+        return [Gene(position) for position in random.sample(
+            range(2 * (self.garden.length + self.garden.width)), count)]
 
-        for _ in range(count):
-            gene = Gene()
-            gene.randomize(x, y, position=positions.pop())
-            genes.append(gene)
-
-        self.chromosome = genes
-
-    def bury_garden(self):
+    def solve(self):
         """
         Hlavna funkcia na pohrabanie zahrady.
 
@@ -151,12 +155,12 @@ class Monk:
         """
         n_moves = 0
 
-        for i, gene in enumerate(self.chromosome):
+        for gene in self.chromosome:
             if self.dead:  # Mnich sa zasekol v strede zahrady
                 break
 
-            x, y = gene.pos
-            d = gene.dir
+            x, y = positions_map[gene.pos]
+            d = gene.get_direction()
             if not self.garden.empty(x, y):  # Nie je mozne vsupit do zahrady
                 continue
 
@@ -282,12 +286,14 @@ class Monk:
         :param mode: sposob krizenia (0, 1, 2, 3)
         :return: novy jedinec
         """
-        child = Monk(self.garden.copy())
+        child = Monk(Population.puzzle.garden.copy())
 
         if mode == 0:
             # Dedenie jednej casti genov od jedneho rodica a zvysku genov od druheho (napr. 0000111111)
             split = random.randrange(len(self.chromosome) + 1)
             child.chromosome = self.chromosome[:split] + other.chromosome[split:]
+            # if len(set(child.chromosome)) != len(child.chromosome):
+            #     print('ERROR')  # TODO continue
         elif mode == 1:
             # Dedenie nahodnych genov od oboch rodicov (napr. 0110100101)
             for i in range(len(self.chromosome)):
@@ -323,18 +329,17 @@ class Monk:
             for i in range(len(self.chromosome)):
                 if random.random() < mutation_rate:
                     new_gene = Gene()
-                    new_gene.randomize(self.garden.length, self.garden.width)
                     self.chromosome[i] = new_gene
         elif mode == 1:
             # Vytvorime nove rotacie v gene
             for i in range(len(self.chromosome)):
                 if random.random() < mutation_rate:
                     gene = self.chromosome[i]
-                    gene.generate_rotations(len(gene.turns))
+                    gene.generate_turns(len(gene.turns))
         elif mode == 2:
             # Vytvorime cely chromozom s novymi genmi
             if random.random() < mutation_rate:
-                self.generate_genes(len(self.chromosome))
+                self.chromosome = self.generate_genes(len(self.chromosome))
         elif mode == 3:
             # Zamenime poradie genov v chromozome
             if random.random() < mutation_rate:
@@ -343,51 +348,62 @@ class Monk:
 
 class Gene:
 
-    def __init__(self):
-        self.pos, self.dir, self.turns = (0, 0), directions[0], [0]
+    length, width = 0, 0
 
-    def __repr__(self):
-        return f'{self.pos}, {self.dir}, {self.turns}'
-
-    def randomize(self, x, y, position=None, n_rotations=6):
-        """
-        Vytvorenie nahodneho genu.
-
-        :param x: dlzka zahrady
-        :param y: vyska zahrady
-        :param position: zaciatocna pozicia
-        :param n_rotations: pocet otacani
-        :return: None
-        """
+    def __init__(self, position=None, n_turns=6):
         random.seed()
         if not position:
-            position = random.randrange(2 * (x + y))
+            position = random.randrange(2 * (Gene.length + Gene.width))
 
-        # Vygenerujeme suradnice zaciatocnej pozicie a smer pohybu
-        if 0 <= position < x:
-            # Pohyb z hornej casti smerom dole
-            self.dir = directions[0]
-            self.pos = (position, 0)
-        elif x <= position < x + y:
-            # Pohyb z pravej strany smerom dolava
-            self.dir = directions[1]
-            self.pos = (x - 1, position - x)
-        elif x + y <= position < 2 * x + y:
-            # Pohyb z dolnej casti smerom hore
-            self.dir = directions[2]
-            self.pos = (2 * x + y - 1 - position, y - 1)
+        self.pos = position  # Nastavime zaciatocnu polohu, kde ma mnich vstupit do zahrady
+        # Vygenerujeme nahodne otacania pre pripad, ak mnich narazi na prekazku v ceste
+        self.turns = self.generate_turns(n_turns)
+
+    def __repr__(self):
+        return f'{positions_map[self.pos]}, {self.get_direction()}, {self.turns}'
+
+    def __eq__(self, other):
+        return self.pos == other.pos
+
+    def __hash__(self):
+        return hash(self.pos)
+
+    def get_direction(self):
+        if 0 <= self.pos < Gene.length:
+            return directions[0]  # Pohyb z hornej casti smerom dole
+        elif Gene.length <= self.pos < Gene.length + Gene.width:
+            return directions[1]  # Pohyb z pravej strany smerom dolava
+        elif Gene.length + Gene.width <= self.pos < 2 * Gene.length + Gene.width:
+            return directions[2]  # Pohyb z dolnej casti smerom hore
         else:
-            # Pohyb z lavej strany smerom doprava
-            self.dir = directions[3]
-            self.pos = (0, 2 * (x + y) - 1 - position)
+            return directions[3]  # Pohyb z lavej strany smerom doprava
 
-        # Vygenerujeme rotacie
-        self.generate_rotations(n_rotations)
+    @staticmethod
+    def create_mapping(length, width):
+        # Kazdemu moznemu vstupu do zahrady priradime unikatnu hodnotu na jej identifikaciu, napr.:
+        #      0  1  2  3
+        #   13 .  .  .  . 4
+        #   12 .  .  .  . 5
+        #   11 .  .  .  . 6
+        #     10  9  8  7
+        Gene.length, Gene.width = length, width
+        for num in range(2 * (length + width)):
+            if 0 <= num < length:
+                d = {num: (num, 0)}
+            elif length <= num < length + width:
+                d = {num: (length - 1, num - length)}
+            elif length + width <= num < 2 * length + width:
+                d = {num: (2 * length + width - 1 - num, width - 1)}
+            else:
+                d = {num: (0, 2 * (length + width) - 1 - num)}
+            positions_map.update(d)
 
-    def generate_rotations(self, count):
+    @staticmethod
+    def generate_turns(count):
         # Generujeme poradie, v akom sa otacame ak narazime na prekazku
         # 1 - otocenie v smere hodinovych ruciciek
         # 0 - otocenie v protismere hodinovych ruciciek
         n_clockwise_turns = random.randrange(count + 1)
-        self.turns = [1] * n_clockwise_turns + [0] * (count - n_clockwise_turns)
-        random.shuffle(self.turns)
+        turns = [1] * n_clockwise_turns + [0] * (count - n_clockwise_turns)
+        random.shuffle(turns)
+        return turns
