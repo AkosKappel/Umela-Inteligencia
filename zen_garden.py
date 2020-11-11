@@ -1,4 +1,11 @@
-blocks = {  # Reprezentacia blokov pri vypisovani zahrady
+input_blocks = {  # Reprezentacia blokov pri nacitavani zahrady z textoveho suboru
+    'K': -1,  # Kamene
+    'Z': -2,  # Zlte listy
+    'O': -3,  # Oranzove listy
+    'C': -4   # Cervene listy
+}
+
+output_blocks = {  # Reprezentacia blokov pri vypisovani zahrady
     -1: '\33[30mK\33[0m',
     -2: '\33[93mZ\33[0m',
     -3: '\33[33mO\33[0m',
@@ -8,23 +15,14 @@ blocks = {  # Reprezentacia blokov pri vypisovani zahrady
 
 class Puzzle:
 
-    # Reprezentacia blokov pri nacitavani zahrady z textoveho suboru
-    block_types = {
-        'K': -1,  # Kamene
-        'Z': -2,  # Zlte listy
-        'O': -3,  # Oranzove listy
-        'C': -4   # Cervene listy
-    }
-
     def __init__(self, file_name):
-        self.garden = Garden()
-        self.solved = False
         self.rocks = []
         self.yellow_leaves = []
         self.orange_leaves = []
         self.red_leaves = []
-        with open(file_name, 'r') as file:
-            self.load_garden(file)
+        self.garden = self.load_garden_from_file(file_name)
+        self.create_lists()
+        self.solved = False
 
     def __repr__(self):
         return f'size({self.garden.length}, {self.garden.width}) rocks({len(self.rocks)}) ' \
@@ -33,20 +31,34 @@ class Puzzle:
     def __str__(self):
         return str(self.garden)
 
-    def load_garden(self, file):
+    @staticmethod
+    def load_garden_from_file(file_name):
         """
         Nacitanie zahrady z externeho textoveho suboru.
 
-        :param file: nazov suboru
+        :param file_name: nazov suboru
         :return: None
         """
-        for y, line in enumerate(file.readlines()):
-            self.garden.field.append([])
-            for x, block in enumerate(line.split()):
-                self.garden.field[y].append(Puzzle.block_types.get(block.upper(), 0))
+        garden = Garden()
+        with open(file_name, 'r') as file:
 
-                # Ak sa na policku nachadza nejaky predmet (napr. kamen), zapiseme si jeho suradnice do zoznamu
-                if block.upper() in Puzzle.block_types.keys():
+            for i, line in enumerate(file.readlines()):
+                garden.field.append([])
+                for block in line.split():
+                    garden.field[i].append(input_blocks.get(block.upper(), 0))
+
+        return garden
+
+    def create_lists(self):
+        """
+        Ak sa na niektorom policku zahrady nachadza nejaky predmet (napr. kamen),
+        tato funkcia si zapise jej suradnice do zoznamu suradnic daneho predmetu.
+
+        :return: None
+        """
+        for y, line in enumerate(self.garden.field):
+            for x, block in enumerate(line):
+                if block in output_blocks.keys():
                     if self.garden.field[y][x] == -1:
                         self.rocks.append((x, y))
                     elif self.garden.field[y][x] == -2:
@@ -56,7 +68,6 @@ class Puzzle:
                     elif self.garden.field[y][x] == -4:
                         self.red_leaves.append((x, y))
 
-        # Nastavenie dlzky, sirky a poctu listov v zahrade
         self.garden.set_parameters(len(self.garden.field), len(self.garden.field[0]),
                                    len(self.yellow_leaves), len(self.orange_leaves),
                                    len(self.red_leaves))
@@ -94,8 +105,8 @@ class Garden:
         s = '\n'
         for y in range(self.width):
             for x in range(self.length):
-                if self.field[y][x] in blocks.keys():
-                    s += f'   {blocks.get(self.field[y][x])}'
+                if self.field[y][x] in output_blocks.keys():
+                    s += f'   {output_blocks.get(self.field[y][x])}'
                 else:
                     s += f'{self.field[y][x]}'.rjust(4, ' ')
             s += '\n'
@@ -137,10 +148,9 @@ class Garden:
         :return: kopia zahrady
         """
         new_garden = Garden()
-        new_garden.set_parameters(self.width, self.length,
-                                  self.n_yellow, self.n_orange, self.n_red)
         for row in self.field:
             new_garden.field.append([0 if block > 0 else block for block in row])
+        new_garden.set_parameters(self.width, self.length, self.n_yellow, self.n_orange, self.n_red)
         return new_garden
 
     def is_outside(self, x, y):  # Overenie, ci pozicia je mimo zahrady
@@ -149,7 +159,7 @@ class Garden:
     def is_leaf(self, x, y):  # Zisti, ci policko obsahuje list
         if self.is_outside(x, y):
             return False
-        return self.field[y][x] != -1 and self.field[y][x] in blocks.keys()
+        return self.field[y][x] != -1 and self.field[y][x] in output_blocks.keys()
 
     def empty(self, x, y):  # Skontroluje, ci mozeme navstivit dane policko
         if self.is_outside(x, y):
