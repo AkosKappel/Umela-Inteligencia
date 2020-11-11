@@ -74,7 +74,7 @@ class Population:
                 min_fitness = m.fitness
                 self.worst = m
 
-        # TODO monk must be alive for solution
+        # TODO best must be alive
         if self.best.fitness >= self.max_fitness:  # Skontrolujeme, ci je uloha vyriesena
             Population.puzzle.solved = True
 
@@ -112,15 +112,33 @@ class Population:
         self.monks, self.size = new_monks, new_size
         self.gen += 1
 
-    def select_parent(self):
-        roulette = random.randrange(self.total_fitness)
-        temp_sum = 0  # Stochasticky vyber (ruleta)
-        for m in self.monks:
-            temp_sum += m.fitness
-            if temp_sum > roulette:
-                return m
+    def select_parent(self, mode=0, k=3):
+        """
+        Vyber rodica z aktualnej populacie.
 
-        return None  # Toto by sa nikdy nemalo stat
+        0 - ruleta
+
+        1 - turnaj
+
+        :param mode: sposob vyberu (0, 1)
+        :param k: pocet jedincov v turnaji
+        :return: rodic
+        """
+        if mode == 0:
+            # Vyber rodica pouzitim rulety
+            roulette = random.randrange(self.total_fitness)
+            temp_sum = 0
+            for m in self.monks:
+                temp_sum += m.fitness
+                if temp_sum > roulette:
+                    return m
+
+            return None  # Toto by sa nikdy nemalo stat
+        elif mode == 1:
+            # Vyber rodica pomocou turnaja
+            tour = random.sample(self.monks, k)
+            tour = sorted(tour, key=lambda x: x.fitness)
+            return tour[0]
 
 
 class Monk:
@@ -144,8 +162,7 @@ class Monk:
         :param count: pocet genov
         :return: None
         """
-        return [Gene(position) for position in random.sample(
-            range(2 * (self.garden.length + self.garden.width)), count)]
+        return [Gene(p) for p in random.sample(range(2 * (self.garden.length + self.garden.width)), count)]
 
     def solve(self):
         """
@@ -154,6 +171,7 @@ class Monk:
         :return: None
         """
         n_moves = 0
+        # TODO fitness = 0
 
         for gene in self.chromosome:
             if self.dead:  # Mnich sa zasekol v strede zahrady
@@ -249,11 +267,11 @@ class Monk:
 
     def collectable(self, x, y):
         """
-        Zisti, ci sa na policku nachadza list a ci ho moze zobrat.
+        Zisti, ci sa na policku nachadza list a ci ho mozeme zobrat.
 
         :param x: x-ova suradnica policka
         :param y: y-ova suradnica policka
-        :return: True ak list mozme zobrat, inak False
+        :return: True ak list mozeme zobrat, inak False
         """
         if not self.garden.is_leaf(x, y):  # Skontrolujeme, ci dane policko obsahuje list
             return False
@@ -281,6 +299,14 @@ class Monk:
     def crossover(self, other, mode=0):
         """
         Krizenie jedincov.
+
+        0 - cast od jedneho rodica a cast od drhuheho
+
+        1 - nahodne geny od oboch rodicov
+
+        2 - rozne dlhe celky genov od nahodneho rodica
+
+        3 - mutacia nahodneho rodica bez krizenia
 
         :param other: druhy jedinec
         :param mode: sposob krizenia (0, 1, 2, 3)
@@ -321,6 +347,14 @@ class Monk:
         """
         Mutacia jedinca.
 
+        0 - mutacia nahodnych genov
+
+        1 - zmena rotacii nahodnych genov
+
+        2 - cely novy chromozom
+
+        3 - zmena poradia genov
+
         :param mutation_rate: pravdepodobnost mutacie
         :param mode: sposob mutacie (0, 1, 2, 3)
         :return: None
@@ -329,10 +363,7 @@ class Monk:
             # Niektore geny zmenime na nove
             for i in range(len(self.chromosome)):
                 if random.random() < mutation_rate:
-                    new_gene = Gene()  # TODO vygeneruj taky gen, ktory nie je v chromozome
-                    while new_gene in self.chromosome:
-                        new_gene = Gene()
-                        # print('AAA')
+                    new_gene = Gene(self.get_missing_position())
                     self.chromosome[i] = new_gene
         elif mode == 1:
             # Vytvorime nove rotacie v niektorych genoch
@@ -349,6 +380,11 @@ class Monk:
             if random.random() < mutation_rate:
                 random.shuffle(self.chromosome)
 
+    def get_missing_position(self):
+        used_pos = [gene.pos for gene in self.chromosome]
+        missing_pos = [pos for pos in positions_map.keys() if pos not in used_pos]
+        return random.choice(missing_pos)
+
 
 class Gene:
 
@@ -363,8 +399,8 @@ class Gene:
         # Vygenerujeme nahodne otacania pre pripad, ak mnich narazi na prekazku v ceste
         self.turns = self.generate_turns(n_turns)
 
-    def __repr__(self):
-        return f'{positions_map[self.pos]}, {self.get_direction()}, {self.turns}'
+    def __str__(self):
+        return f'{self.pos}, {self.get_direction()}, {self.turns}'
 
     def __eq__(self, other):
         return self.pos == other.pos
