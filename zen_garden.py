@@ -20,7 +20,7 @@ class Puzzle:
         self.yellow_leaves = []
         self.orange_leaves = []
         self.red_leaves = []
-        self.garden = self.load_garden_from_file(file_name)
+        self.garden = Puzzle.load_garden_from_file(file_name)
         self.create_lists()
         self.solved = False
 
