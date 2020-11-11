@@ -6,6 +6,7 @@ positions_map = {}
 class Population:
 
     puzzle = None
+    max_fitness = 0
 
     def __init__(self, size, puzzle):
         self.size, Population.puzzle = size, puzzle
@@ -14,12 +15,12 @@ class Population:
         self.gen = 1
         self.total_fitness = 0
         self.best, self.worst = self.monks[0], self.monks[-1]
-        self.max_fitness = sum(row.count(0) for row in puzzle.garden.field)
-        self.max_fitness += puzzle.garden.n_yellow + puzzle.garden.n_orange + puzzle.garden.n_red
+        Population.max_fitness = sum(row.count(0) for row in puzzle.garden.field)
+        Population.max_fitness += puzzle.garden.n_yellow + puzzle.garden.n_orange + puzzle.garden.n_red
 
     def __repr__(self):  # TODO redo stats
         return f'Gen {self.gen:2d}: Size {self.size}, BestF {self.best.fitness if self.best else 0:3d}, ' \
-               f'AvgF {self.total_fitness / self.size:.2f}, MaxF {self.max_fitness:3d}'
+               f'AvgF {self.total_fitness / self.size:.2f}, MaxF {Population.max_fitness:3d}'
 
     @staticmethod
     def create_monks(size):
@@ -58,12 +59,12 @@ class Population:
 
         :return: None
         """
-        min_fitness = self.max_fitness
+        min_fitness = Population.max_fitness
         max_fitness = 0
         self.total_fitness = 0
 
         for m in self.monks:
-            m.calculate_fitness()  # Zistime fitness kazdeho jedinca
+            # m.calculate_fitness()  # Zistime fitness kazdeho jedinca
             self.total_fitness += m.fitness  # Spocitame sucet vsetkych fitness hodnot
 
             if m.fitness > max_fitness:  # Najdeme najlepsieho jedinca
@@ -75,7 +76,7 @@ class Population:
                 self.worst = m
 
         # TODO best must be alive
-        if self.best.fitness >= self.max_fitness:  # Skontrolujeme, ci je uloha vyriesena
+        if self.best.fitness >= Population.max_fitness and not self.best.dead:  # Skontrolujeme, ci je uloha vyriesena
             Population.puzzle.solved = True
 
     def natural_selection(self):
@@ -132,7 +133,6 @@ class Population:
                 temp_sum += m.fitness
                 if temp_sum > roulette:
                     return m
-
             return None  # Toto by sa nikdy nemalo stat
         elif mode == 1:
             # Vyber rodica pomocou turnaja
@@ -166,15 +166,21 @@ class Monk:
 
     def solve(self):
         """
-        Hlavna funkcia na pohrabanie zahrady.
+        Hlavna funkcia na pohrabanie zahrady. Pocas prehrabavania zahrady sa vypocita aj fitnes jedinca.
 
         :return: None
         """
         n_moves = 0
-        # TODO fitness = 0
+        fitness = 0
+        x, y = -1, -1
 
         for gene in self.chromosome:
             if self.dead:  # Mnich sa zasekol v strede zahrady
+                # Ak sa mnich pri poslednom policku zasekol na kraji zahrady, ale pohrabal
+                # celu zahradu, tak iba v tom pripade to akceptujeme ako uspesne riesenie
+                if fitness == Population.max_fitness and (x, y) in positions_map.values():
+                    Population.puzzle.solved = True
+                    self.dead = False
                 break
 
             x, y = positions_map[gene.pos]
@@ -188,6 +194,7 @@ class Monk:
             while True:
                 self.garden.field[y][x] = n_moves  # Vykoname pohyb dopredu
                 x, y = self.move(x, y, d)
+                fitness += 1
 
                 if self.garden.is_outside(x, y):  # Dostali sme sa von zo zahrady a ideme na dalsi gen
                     break
@@ -197,6 +204,7 @@ class Monk:
                     self.n_collected += 1
                     continue
 
+                fitness -= 1
                 x, y = self.move(x, y, d, forward=False)  # Ak je na ceste prekazka vratime sa o 1 policko
                 d = self.turn(x, y, d, gene.turns[turn_index])  # Zmenime smer pohybu
 
@@ -204,7 +212,9 @@ class Monk:
                 turn_index %= len(gene.turns)
                 if d is None:  # Zasekli sme sa v strede zahrady
                     self.dead = True
+                    fitness += 1
                     break
+        self.fitness = fitness
 
     @staticmethod
     def move(x, y, d, forward=True):
@@ -399,8 +409,8 @@ class Gene:
         # Vygenerujeme nahodne otacania pre pripad, ak mnich narazi na prekazku v ceste
         self.turns = self.generate_turns(n_turns)
 
-    def __str__(self):
-        return f'{self.pos}, {self.get_direction()}, {self.turns}'
+    def __repr__(self):
+        return f'{positions_map[self.pos]}, {self.get_direction()}, {self.turns}'
 
     def __eq__(self, other):
         return self.pos == other.pos
