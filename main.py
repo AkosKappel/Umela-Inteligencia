@@ -46,6 +46,12 @@ def main():
 
 
 def load_puzzle(file_name):
+    """
+    Nacita zahradu z externeho textoveho suboru a nastavi pomocne globalne premenne.
+
+    :param file_name: nazov suboru
+    :return: objekt s nacitanou zahradou
+    """
     field = []
     garden = Garden(field)
 
@@ -79,6 +85,9 @@ def load_puzzle(file_name):
 
 
 def init_positions_ID():
+    """
+    Spocita pocet kazdeho typu bloku v zahrade. Udaje sa ukladaju do premennej positions_ID.
+    """
     # Kazdemu vstupu do zahrady priradime unikatnu hodnotu na jej identifikaciu.
     # Napriklad pre zahradu 3 x 4 by sme pridelili tieto hodnoty:
     #       0  1  2  3
@@ -104,6 +113,11 @@ def init_positions_ID():
 class Garden:
 
     def __init__(self, matrix):
+        """
+        Zenova zahrada.
+
+        :param matrix: matica reprezentujuca zahradu
+        """
         self.field = matrix
 
     def __repr__(self):
@@ -124,7 +138,7 @@ class Garden:
 
     def copy(self):
         """
-        Vytvori novu kopiu zahrady.
+        Vytvori sa nova kopia zahrady.
 
         :return: nova zahrada
         """
@@ -135,22 +149,48 @@ class Garden:
 
         return Garden(field)
 
-    def empty(self, x, y):  # Skontroluje, ci dane policko je prazdne
+    def empty(self, x, y):
+        """
+        Skontroluje, ci je policko (x, y) prazdne.
+
+        :param x: x-ova suradnica policka
+        :param y: y-ova suradnica policka
+        :return: True ak je policko prazdne, inak False
+        """
         if Garden.outside(x, y):
             return False
         return self.field[y][x] == 0
 
-    def leaf(self, x, y):  # Zisti, ci policko obsahuje list
+    def leaf(self, x, y):
+        """
+        Zisti, ci sa na policku nachadza list.
+
+        :param x: x-ova suradnica policka
+        :param y: y-ova suradnica policka
+        :return: True ak na policku je list, inak False
+        """
         if Garden.outside(x, y):
             return False
         return self.field[y][x] != -1 and self.field[y][x] in output_blocks.keys()
 
     @staticmethod
-    def outside(x, y):  # Overi, ci pozicia je mimo zahrady
+    def outside(x, y):
+        """
+        Overi, ci je pozicia (x, y) mimo zahrady.
+
+        :param x: x-ova suradnica policka
+        :param y: y-ova suradnica policka
+        :return: True ak je policko mimo zahrady, inak False
+        """
         return x < 0 or x >= length or y < 0 or y >= width
 
     @staticmethod
-    def get_leaves_count():  # Vrati pocet vsetkych farieb listov v zahrade
+    def get_leaves_count():
+        """
+        Z premennej block_counter precita pocet zltych, oranzovych a cervenych listov v zahrade.
+
+        :return: pocet vsetkych farieb listov v zahrade
+        """
         return (block_counter[-2] if -2 in block_counter.keys() else 0,
                 block_counter[-3] if -3 in block_counter.keys() else 0,
                 block_counter[-4] if -4 in block_counter.keys() else 0)
@@ -161,6 +201,12 @@ class Garden:
 class Gene:
 
     def __init__(self, position, n_turns=6):
+        """
+        Gen tvoriaci chrmozom jedinca.
+
+        :param position: vstupna pozicia do zahrady
+        :param n_turns: pocet instrukcii na otocenie sa, ak na ceste je prekazka
+        """
         self.position = position
         # Generujeme poradie, v akom sa otacame ak narazime na prekazku
         # 1 - otocenie v smere hodinovych ruciciek
@@ -172,7 +218,7 @@ class Gene:
         return f'{self.position} {self.turns} {positions_ID[self.position]} {self.get_direction()}'
 
     def __str__(self):
-        return f'{self.position} {self.turns} {positions_ID[self.position]} {self.get_direction()}'
+        return f'{positions_ID[self.position]} {self.get_direction()} {self.turns}'
 
     def __eq__(self, other):
         return self.position == other.position
@@ -180,7 +226,10 @@ class Gene:
     def __hash__(self):
         return hash(self.position)
 
-    def get_direction(self):  # Zisti smer pohybu zo zaciatocnej pozicie zahrady
+    def get_direction(self):
+        """
+        Zisti informaciu o smere pohybu zo vstupnej pozicie do zahrady.
+        """
         if 0 <= self.position < length:
             return directions[0]  # Pohyb z hornej casti smerom dole
         elif length <= self.position < length + width:
@@ -196,6 +245,11 @@ class Gene:
 class Individual:
 
     def __init__(self, garden):
+        """
+        Jedinec, ktory sa snazi vyriesit problem.
+
+        :param garden: kopia povodnej zahrady
+        """
         self.garden = garden
         self.chromosome = []  # Zoznam genov
         self.fitness = 0
@@ -208,8 +262,8 @@ class Individual:
         return f'fitness {self.fitness}, genes {len(self.chromosome)}, collected {self.collected}'
 
     def __str__(self):
-        return f'{str(self.garden)}\nfitness {self.fitness}, genes {len(self.chromosome)}\n\t' + \
-               '\n\t'.join([str(i + 1) + ': ' + repr(gene) for i, gene in enumerate(self.used_genes)])
+        return f'{self.garden}\nfitness {self.fitness}, genes {len(self.chromosome)}\n\t' + \
+               '\n\t'.join([f'{i}: ' + str(gene) for i, gene in enumerate(self.used_genes, start=1)])
 
     @staticmethod
     def create_genes(count):
@@ -285,7 +339,7 @@ class Individual:
                     fitness += 1
                     break
 
-        if survived:
+        if survived:  # Bonusovy bod pre jedinca, ktory uspesne vysiel zo zahrady
             fitness += 1
         else:  # Bodovy postih pre jedinca, ktory sa zasekol v zahrade
             fitness *= 0.5
@@ -400,7 +454,7 @@ class Population:
         self.best, self.worst = None, None
 
     def __repr__(self):
-        return f'{self.generation} {self.size} {self.fitness_sum}'
+        return f'Generation {self.generation}, Size {self.size}, Fitness sum {self.fitness_sum}'
 
     def __str__(self):
         return f'Gen {self.generation}, ' \
