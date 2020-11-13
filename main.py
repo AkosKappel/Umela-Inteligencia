@@ -352,6 +352,12 @@ class Individual:
         return fitness
 
     def move(self, forward=True):
+        """
+        Jedinec vykona krok dopredu alebo dozadu o jedno policko v smere jeho pohyby.
+
+        :param forward: ma sa vykonat pohyb dopredu
+        :return: None
+        """
         if self.direction == directions[0]:
             self.y = self.y + 1 if forward else self.y - 1  # Dole
         elif self.direction == directions[1]:
@@ -362,6 +368,14 @@ class Individual:
             self.x = self.x + 1 if forward else self.x - 1  # Doprava
 
     def turn(self, clockwise=True):
+        """
+        Jedninec zmeni smer svojho pohybu na taky smer, kde nie je pred nim ziadna prekazka.
+        Ak taky smer neexistuje, smer sa nastavi na None, a ak sa vie otocit doprava aj dolava,
+        rozhodne sa podla parametra clockwise.
+
+        :param clockwise: otocenie v smere hodinovych ruciciek
+        :return: None
+        """
         if self.direction in directions[0::2]:  # Vertikalny pohyb zmenime na horizontalny
             can_go_left = self.garden.empty(self.x - 1, self.y) or self.x == 0
             can_go_right = self.garden.empty(self.x + 1, self.y) or self.x + 1 == length
@@ -411,29 +425,48 @@ class Individual:
                (block == -4 and y + o <= self.collected < y + o + r)
 
     def get_missing_positions(self):
+        """
+        Zisti identifikatory tych zaciatocnych policok zahrady, ktore este nie su v chromozome jedinca.
+
+        :return: zoznam vsetkych chybajucich identifikatorov usporiadane v nahodnom poradi
+        """
         used = [gene.position for gene in self.chromosome]
         missing = [position for position in positions_ID.keys() if position not in used]
         random.shuffle(missing)
         return missing
 
     def crossover(self, other):
+        """
+        Krizenie jedinca s dalsim jedincom.
+
+        :param other: druhy jedinec
+        :return: dieta, ktore vzniklo krizenim 2 rodicov
+        """
         child = Individual(puzzle.copy())
 
+        # Dedenie jednej casti genov od jedneho rodica a zvysku genov od druheho (napr. 0000111111)
         split = random.randrange(len(self.chromosome) + 1)
         child.chromosome = self.chromosome[:split]
         for gene in other.chromosome[split:]:
-            if gene not in child.chromosome:
-                child.chromosome.append(gene)
+            if gene not in child.chromosome:  # Predideme viacnasobnemu dedeniu rovnakych genov
+                child.chromosome.append(gene)  # (rovnaky gen == rovnaka zaciatocna pozicia)
 
         old_len = len(self.chromosome)
         missing = self.get_missing_positions()
 
+        # Ak dieta dedi 2-krat ten isty gen, jeden z nich sa nahradi novym genom
         while old_len != len(child.chromosome):
             child.chromosome.append(Gene(missing.pop()))
 
         return child
 
     def mutate(self, mutation_rate=0.05):
+        """
+        Kazdy gen v chromozome jedinca sa s predvolenou pravdepodobnostou zmeni na novy gen.
+
+        :param mutation_rate: pravdepodobnast mutacie
+        :return: None
+        """
         missing = self.get_missing_positions()
 
         for i, gene in enumerate(self.chromosome):
@@ -447,6 +480,11 @@ class Individual:
 class Population:
 
     def __init__(self, size):
+        """
+        Populacia tvorena rovnakymi jedincami.
+
+        :param size: velkost populacie
+        """
         self.size = size
         self.monks = self.create_monks(size)
         self.generation = 1
@@ -480,6 +518,12 @@ class Population:
         return monks
 
     def solve_puzzle(self):
+        """
+        Kazdy jedinec populacie pohrabe zahradu, vypocita sa ich fitnes hednota,
+        zaroven sa spocita celkova fitnes populacie a urci sa najlepsi a najhorsi jedinec.
+
+        :return: None
+        """
         total_fitness = 0
         temp_min = max_fitness
         temp_max = 0
@@ -500,6 +544,11 @@ class Population:
         self.fitness_sum = total_fitness
 
     def natural_selection(self):
+        """
+        Evolucia jednej generacie jedincov.
+
+        :return: None
+        """
         # Elitarizmus: najlepsi jedinec prechadza do dalsej generacie bez mutacie
         best_monk = Individual(puzzle.copy())
         best_monk.chromosome = self.best.chromosome
@@ -552,14 +601,14 @@ class Population:
 
             return None  # Toto by sa nikdy nemalo stat
 
-    def show_all(self):
+    def show_all(self):  # Vypise vsetkych jedincov populacie
         for monk in self.monks:
             print(monk, '\n')
 
-    def show_best(self):
+    def show_best(self):  # Vypise najlepsieho jedinca
         print(self.best, '\n')
 
-    def show_worst(self):
+    def show_worst(self):  # Vypise najhorsieho jedinca
         print(self.worst, '\n')
 
 
