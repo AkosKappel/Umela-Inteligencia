@@ -22,12 +22,16 @@ max_fitness = 0  # Maximalna ziskatelna fitnes
 solved = False  # Urcuje, ci sa podarilo uspesne pohrabat celu zahradu
 
 # Nastavitelne parametre:
-max_generation = 300
+population_size = 30  # Velkost populacie
+selection_method = 'roulette'  # Metoda vyberu rodica (roulette, tournament)
+mutation_probability = 0.05  # Pravdepodobnost mutacie
+fitness_penalty = 0.5  # Vyska penalizacie (0 ziadna penalizacia, 1 maximalna penalizacia)
+max_generation = 300  # Maximalna povolena generacia populacie
 
 
 def main():
     # Inicializacia prvej generacie
-    monks = Population(50)
+    monks = Population(population_size)
     monks.solve_puzzle()
     print(monks)
 
@@ -42,7 +46,7 @@ def main():
     monks.show_best()
     print(f'{end - start:.3f} s')
 
-# ----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------
 
 
 def load_puzzle(file_name):
@@ -77,9 +81,10 @@ def load_puzzle(file_name):
     # Kazdemu moznemu vstupu do zahrady priradime identifikacne cislo
     init_positions_ID()
 
-    # Vypocitame maximalnu ziskatelnu fitnes hodnotu
-    global max_fitness
+    # Vypocitame maximalnu ziskatelnu fitnes hodnotu a nastavime fitnes penalizaciu
+    global max_fitness, fitness_penalty
     max_fitness = length * width - block_counter[-1] + 1
+    fitness_penalty = 1 - fitness_penalty
 
     return garden
 
@@ -107,7 +112,7 @@ def init_positions_ID():
             mapping = {num: (0, 2 * (length + width) - 1 - num)}
         positions_ID.update(mapping)
 
-# ----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------
 
 
 class Garden:
@@ -195,7 +200,7 @@ class Garden:
                 block_counter[-3] if -3 in block_counter.keys() else 0,
                 block_counter[-4] if -4 in block_counter.keys() else 0)
 
-# ----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------
 
 
 class Gene:
@@ -239,7 +244,7 @@ class Gene:
         else:
             return directions[3]  # Pohyb z lavej strany smerom doprava
 
-# ----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------
 
 
 class Individual:
@@ -263,7 +268,7 @@ class Individual:
 
     def __str__(self):
         return f'{self.garden}\nfitness {self.fitness}, genes {len(self.chromosome)}\n\t' + \
-               '\n\t'.join([f'{i}: ' + str(gene) for i, gene in enumerate(self.used_genes, start=1)])
+               '\n\t'.join([f'{i:2}: ' + str(gene) for i, gene in enumerate(self.used_genes, start=1)])
 
     @staticmethod
     def create_genes(count):
@@ -339,13 +344,11 @@ class Individual:
                     fitness += 1
                     break
 
-        if survived:  # Bonusovy bod pre jedinca, ktory uspesne vysiel zo zahrady
-            fitness += 1
-        else:  # Bodovy postih pre jedinca, ktory sa zasekol v zahrade
-            fitness *= 0.5
-            fitness = int(fitness)
+        # Pridelime bonusovy bod pre jedinca, ktory uspesne vysiel zo zahrady
+        # a bodovy postih pre jedinca, ktory sa zasekol v zahrade
+        fitness = fitness + 1 if survived else int(fitness * fitness_penalty)
 
-        if fitness >= max_fitness:
+        if fitness >= max_fitness:  # Skontrolujeme, ci je cela zahrada uspesne pohrabana
             global solved
             solved = True
 
@@ -428,7 +431,7 @@ class Individual:
         """
         Zisti identifikatory tych zaciatocnych policok zahrady, ktore este nie su v chromozome jedinca.
 
-        :return: zoznam vsetkych chybajucich identifikatorov usporiadane v nahodnom poradi
+        :return: zoznam vsetkych chybajucich identifikatorov usporiadanych v nahodnom poradi
         """
         used = [gene.position for gene in self.chromosome]
         missing = [position for position in positions_ID.keys() if position not in used]
@@ -474,7 +477,7 @@ class Individual:
                 new_gene = Gene(missing.pop())
                 self.chromosome[i] = new_gene
 
-# ----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------
 
 
 class Population:
@@ -497,7 +500,7 @@ class Population:
     def __str__(self):
         return f'Gen {self.generation}, ' \
                f'Best {self.best.fitness}, Worst {self.worst.fitness}, ' \
-               f'Avg {self.fitness_sum / self.size}, Sum {self.fitness_sum}'
+               f'Avg {self.fitness_sum / self.size:.2f}, Sum {self.fitness_sum}'
 
     @staticmethod
     def create_monks(size):
@@ -559,14 +562,14 @@ class Population:
         new_monks += self.create_monks(n_new_blood)
 
         while new_size < self.size:
-            p1 = self.select_parent()  # Vyberieme si 2 rodicov
-            p2 = self.select_parent()
+            p1 = self.select_parent(selection_method)  # Vyberieme si 2 rodicov
+            p2 = self.select_parent(selection_method)
 
             c1 = p1.crossover(p2)  # Vytvorime ich deti pomocou krizenia
             c2 = p2.crossover(p1)
 
-            c1.mutate()  # Mutujeme deti s prednastavenou pravdepodobnostou
-            c2.mutate()
+            c1.mutate(mutation_probability)  # Mutujeme deti s prednastavenou pravdepodobnostou
+            c2.mutate(mutation_probability)
 
             new_monks.extend((c1, c2))  # Pridame deti do nasledujucej generacie
             new_size += 2
