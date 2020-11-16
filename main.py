@@ -15,7 +15,7 @@ output_blocks = {  # Reprezentacia blokov pri vypisovani zahrady
     -3: '\33[33mO\33[0m',
     -4: '\33[31mC\33[0m'
 }
-positions_ID = {}  # Zoznam identifikatorov vstupnych pozicii do zahrady
+positions_ID = {}  # Zoznam vstupnych pozicii do zahrady [0, 2 * (x + y) - 1]
 directions = ('down', 'left', 'up', 'right')  # Vsetky mozne smery pohybu po zahrade
 length, width = 0, 0  # Rozmery zahrady
 max_fitness = 0  # Maximalna ziskatelna fitnes
@@ -24,8 +24,10 @@ solved = False  # Urcuje, ci sa podarilo uspesne pohrabat celu zahradu
 # Nastavitelne parametre:
 population_size = 30  # Velkost populacie
 selection_method = 'roulette'  # Metoda vyberu rodica (roulette, tournament)
+tour_size = 3  # Pocet jedincov v turnaji
 mutation_probability = 0.05  # Pravdepodobnost mutacie
 fitness_penalty = 0.5  # Vyska penalizacie (0 ziadna penalizacia, 1 maximalna penalizacia)
+new_blood_portion = 0.10  # Podiel novych jedincov v nasledujucej generacii
 max_generation = 300  # Maximalna povolena generacia populacie
 
 
@@ -558,12 +560,12 @@ class Population:
         new_monks, new_size = [best_monk], 1
 
         # Pridame novu krv do novej generacie
-        n_new_blood = int(0.10 * self.size)
+        n_new_blood = int(new_blood_portion * self.size)
         new_monks += self.create_monks(n_new_blood)
 
         while new_size < self.size:
-            p1 = self.select_parent(selection_method)  # Vyberieme si 2 rodicov
-            p2 = self.select_parent(selection_method)
+            p1 = self.select_parent(selection_method, tour_size)  # Vyberieme si 2 rodicov
+            p2 = self.select_parent(selection_method, tour_size)
 
             c1 = p1.crossover(p2)  # Vytvorime ich deti pomocou krizenia
             c2 = p2.crossover(p1)
