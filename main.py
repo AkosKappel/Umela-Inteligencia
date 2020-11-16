@@ -616,5 +616,5 @@ class Population:
 
 
 if __name__ == "__main__":
-    puzzle = load_puzzle('example_1.txt')
+    puzzle = load_puzzle('test_gardens\\garden_1.txt')
     main()
