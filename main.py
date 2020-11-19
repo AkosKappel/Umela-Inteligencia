@@ -25,6 +25,7 @@ solved = False  # Urcuje, ci sa podarilo uspesne pohrabat celu zahradu
 population_size = 30  # Velkost populacie
 selection_method = 'roulette'  # Metoda vyberu rodica (roulette, tournament)
 tour_size = 3  # Pocet jedincov v turnaji
+leaf_bonus = 5  # Fitness za pozbieranie listu
 mutation_probability = 0.05  # Pravdepodobnost mutacie
 fitness_penalty = 0.5  # Vyska penalizacie (0 ziadna penalizacia, 1 maximalna penalizacia)
 new_blood_portion = 0.10  # Podiel novych jedincov v nasledujucej generacii
@@ -33,19 +34,25 @@ max_generation = 300  # Maximalna povolena generacia populacie
 
 def main():
     # Inicializacia prvej generacie
-    monks = Population(population_size)
-    monks.solve_puzzle()
-    print(monks)
+    population = Population(population_size)
+    # population.monks[0].chromosome[0] = Gene(35)
+    print(max_fitness)
+    population.solve_puzzle()
+    print(population)
 
     start = time.time()
-    while monks.generation < max_generation and not solved:
-        monks.natural_selection()  # Vytvorime novu generaciu
-        monks.solve_puzzle()  # Pohrabeme zahradu
-        print(monks)  # Vypiseme informacie o aktualnej generacii
+    while population.generation < max_generation and not solved:
+        population.natural_selection()  # Vytvorime novu generaciu
+        population.solve_puzzle()  # Pohrabeme zahradu
+        print(population)  # Vypiseme informacie o aktualnej generacii
     end = time.time()
 
+    print('Povodna nepohrabana zahrada')
     print(puzzle)
-    monks.show_best()
+
+    print('Zahrada najlepsieho jedinca')
+    population.show_best()
+
     print(f'{end - start:.3f} s')
 
 # --------------------------------------------------------------------------------------------------------------
@@ -83,9 +90,13 @@ def load_puzzle(file_name):
     # Kazdemu moznemu vstupu do zahrady priradime identifikacne cislo
     init_positions_ID()
 
+    for value in (-1, -2, -3, -4):
+        block_counter.setdefault(value, 0)
+
     # Vypocitame maximalnu ziskatelnu fitnes hodnotu a nastavime fitnes penalizaciu
     global max_fitness, fitness_penalty
-    max_fitness = length * width - block_counter[-1] + 1
+    leaf_count = block_counter[-2] + block_counter[-3] + block_counter[-4]
+    max_fitness = length * width - block_counter[-1] + 1 + leaf_bonus * leaf_count
     fitness_penalty = 1 - fitness_penalty
 
     return garden
@@ -331,6 +342,7 @@ class Individual:
                 if self.garden.empty(self.x, self.y):  # Pokracujeme dalej rovno v ceste
                     continue
                 if self.can_collect():  # Ak mozeme, tak pozbierame list a pokracujeme v ceste
+                    fitness += leaf_bonus
                     self.collected += 1
                     continue
 
@@ -345,6 +357,7 @@ class Individual:
                     survived = False
                     fitness += 1
                     break
+        # fitness = self.calculate_fitness()
 
         # Pridelime bonusovy bod pre jedinca, ktory uspesne vysiel zo zahrady
         # a bodovy postih pre jedinca, ktory sa zasekol v zahrade
