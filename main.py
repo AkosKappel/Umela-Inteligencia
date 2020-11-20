@@ -1,7 +1,18 @@
 import random
 import time
 
+"""
+Umela inteligencia - Zadanie 3
+Evolucny algoritmus
+
+Nazov ulohy: Zenova zahrada
+Autor: Akos Kappel
+"""
+
 # Pomocne globalne premenne:
+length, width = 0, 0  # Rozmery zahrady
+directions = ('down', 'left', 'up', 'right')  # Vsetky mozne smery pohybu po zahrade
+positions_ID = {}  # Zoznam vstupnych pozicii do zahrady [0, 1, 2, ... 2 * (x + y) - 1]
 block_counter = {}  # Pocetnost roznych typov blokov v zahrade
 input_blocks = {  # Reprezentacia blokov pri nacitavani zahrady z textoveho suboru
     'K': -1,  # Kamene
@@ -15,15 +26,12 @@ output_blocks = {  # Reprezentacia blokov pri vypisovani zahrady
     -3: '\33[33mO\33[0m',
     -4: '\33[31mC\33[0m'
 }
-positions_ID = {}  # Zoznam vstupnych pozicii do zahrady [0, 2 * (x + y) - 1]
-directions = ('down', 'left', 'up', 'right')  # Vsetky mozne smery pohybu po zahrade
-length, width = 0, 0  # Rozmery zahrady
 max_fitness = 0  # Maximalna ziskatelna fitnes
 solved = False  # Urcuje, ci sa podarilo uspesne pohrabat celu zahradu
 
-# Nastavitelne parametre:
+# Nastavitelne parametre evolucneho algoritmu:
 population_size = 30  # Velkost populacie
-selection_method = 'roulette'  # Metoda vyberu rodica (roulette, tournament)
+selection_method = 'tournament'  # Metoda vyberu rodica (roulette, tournament)
 tour_size = 3  # Pocet jedincov v turnaji
 leaf_bonus = 5  # Fitness za pozbieranie listu
 mutation_probability = 0.05  # Pravdepodobnost mutacie
@@ -36,7 +44,6 @@ def main():
     # Inicializacia prvej generacie
     population = Population(population_size)
     # population.monks[0].chromosome[0] = Gene(35)
-    print(max_fitness)
     population.solve_puzzle()
     print(population)
 
@@ -306,6 +313,7 @@ class Individual:
                 if block > 0:
                     fitness += 1
 
+        fitness += self.collected * leaf_bonus
         return fitness
 
     def solve_garden(self):
@@ -357,7 +365,7 @@ class Individual:
                     survived = False
                     fitness += 1
                     break
-        # fitness = self.calculate_fitness()
+        # fitness = self.calculate_fitness()  # Tato metoda je nahradena priebeznym vypoctom fitness
 
         # Pridelime bonusovy bod pre jedinca, ktory uspesne vysiel zo zahrady
         # a bodovy postih pre jedinca, ktory sa zasekol v zahrade
