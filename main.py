@@ -31,7 +31,7 @@ solved = False  # Urcuje, ci sa podarilo uspesne pohrabat celu zahradu
 
 # Nastavitelne parametre evolucneho algoritmu:
 population_size = 30  # Velkost populacie
-selection_method = 'tournament'  # Metoda vyberu rodica (roulette, tournament)
+selection_method = 'roulette'  # Metoda vyberu rodica (roulette, tournament)
 tour_size = 3  # Pocet jedincov v turnaji
 leaf_bonus = 5  # Fitness za pozbieranie listu
 mutation_probability = 0.05  # Pravdepodobnost mutacie
@@ -43,7 +43,6 @@ max_generation = 300  # Maximalna povolena generacia populacie
 def main():
     # Inicializacia prvej generacie
     population = Population(population_size)
-    # population.monks[0].chromosome[0] = Gene(35)
     population.solve_puzzle()
     print(population)
 
@@ -54,7 +53,7 @@ def main():
         print(population)  # Vypiseme informacie o aktualnej generacii
     end = time.time()
 
-    print('Povodna nepohrabana zahrada')
+    print('\nPovodna nepohrabana zahrada')
     print(puzzle)
 
     print('Zahrada najlepsieho jedinca')
@@ -284,11 +283,11 @@ class Individual:
         self.direction = None
 
     def __repr__(self):
-        return f'fitness {self.fitness}, genes {len(self.chromosome)}, collected {self.collected}'
+        return f'fitness {self.fitness}, collected {self.collected}, genes {len(self.chromosome)}\n\t' + \
+               '\n\t'.join([f'{i:2}: ' + str(gene) for i, gene in enumerate(self.used_genes, start=1)])
 
     def __str__(self):
-        return f'{self.garden}\nfitness {self.fitness}, genes {len(self.chromosome)}\n\t' + \
-               '\n\t'.join([f'{i:2}: ' + str(gene) for i, gene in enumerate(self.used_genes, start=1)])
+        return f'{self.garden}'
 
     @staticmethod
     def create_genes(count):
@@ -629,13 +628,13 @@ class Population:
 
     def show_all(self):  # Vypise vsetkych jedincov populacie
         for monk in self.monks:
-            print(monk, '\n')
+            print(monk)
 
     def show_best(self):  # Vypise najlepsieho jedinca
-        print(self.best, '\n')
+        print(self.best)
 
     def show_worst(self):  # Vypise najhorsieho jedinca
-        print(self.worst, '\n')
+        print(self.worst)
 
 
 if __name__ == "__main__":
