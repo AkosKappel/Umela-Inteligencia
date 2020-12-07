@@ -4,10 +4,9 @@ __version__ = '1.0'
 from matplotlib import pyplot as plt
 # from sklearn.cluster import KMeans
 # import pandas as pd
-# import numpy as np
+import numpy as np
 import random
 import time
-import math
 
 
 min_value, max_value = -5000, 5000  # Interval suradnic nahodnych bodov v 2D priestore
@@ -29,15 +28,15 @@ def generate_dataset(n_main_dots: int, n_close_dots: int):
 
 
 def distance(point_a, point_b):
-    return math.sqrt((point_b[0] - point_a[0]) ** 2 + (point_b[1] - point_a[1]) ** 2)
+    return np.sqrt((point_b[0] - point_a[0]) ** 2 + (point_b[1] - point_a[1]) ** 2)
 
 
-def kmeans_centroid(dots: list, k: int):
-    centroids = generate_random_dots(k)
-    clusters = [[] for _ in range(k)]
+def assign_clusters(dots, centroids):
+    clusters = [[] for _ in range(len(centroids))]
+    inf = np.inf
 
     for dot in dots:
-        min_distance = math.inf
+        min_distance = inf
         index = 0
 
         for i, centroid in enumerate(centroids):
@@ -50,16 +49,42 @@ def kmeans_centroid(dots: list, k: int):
     return clusters
 
 
+def calculate_centroids(clusters):
+    centroids = []
+    for cluster in clusters:
+        try:
+            x, y = list(zip(*cluster))
+        except ValueError:
+            continue
+        centroid = (sum(x)/len(x), sum(y)/len(y))
+        centroids.append(centroid)
+    return centroids
+
+
+def kmeans_centroid(dots: list, k: int):
+    centroids = generate_random_dots(k)
+    clusters = assign_clusters(dots, centroids)
+
+    for _ in range(8):
+        centroids = calculate_centroids(clusters)
+        clusters = assign_clusters(dots, centroids)
+
+    return centroids, clusters
+
+
 def main():
     random.seed(41186)
     start = time.time()
 
     dots = generate_dataset(20, 40_000)
-    clusters = kmeans_centroid(dots, 7)
+    centroids, clusters = kmeans_centroid(dots, 20)
 
     for cluster in clusters:
         x, y = list(zip(*cluster))
         plt.scatter(x, y)
+
+    x, y = list(zip(*centroids))
+    plt.scatter(x, y, c='k', marker='x')
 
     print(time.time() - start)
     plt.show()
