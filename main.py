@@ -17,9 +17,9 @@ def generate_random_dots(count: int):
     return [(random.randint(min_value, max_value), random.randint(min_value, max_value)) for _ in range(count)]
 
 
-def generate_dataset(n_main_dots: int, n_close_dots: int):
+def generate_dataset(n_main_dots: int, n_nearby_dots: int):
     dots = generate_random_dots(n_main_dots)
-    for _ in range(n_close_dots):
+    for _ in range(n_nearby_dots):
         dot = random.choice(dots)
         x_offset, y_offset = random.randint(min_offset, max_offset), random.randint(min_offset, max_offset)
         new_dot = (dot[0] + x_offset, dot[1] + y_offset)
