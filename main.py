@@ -24,7 +24,7 @@ def generate_dataset(n_main_dots: int, n_close_dots: int):
         x_offset, y_offset = random.randint(min_offset, max_offset), random.randint(min_offset, max_offset)
         new_dot = (dot[0] + x_offset, dot[1] + y_offset)
         dots.append(new_dot)
-    return dots  # list(zip(*dots))
+    return dots
 
 
 def distance(point_a, point_b):
@@ -32,12 +32,18 @@ def distance(point_a, point_b):
 
 
 def plot_clusters(clusters, centers, show_and_clear=True):
+    index = 0
+    colors = ('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
+              '#7f7f7f', '#bcbd22', '#17becf', '#ffe119', '#4363d8', '#911eb4', '#bcf60c',
+              '#fabebe', '#000075', '#008080', '#e6beff', '#fffac8', '#800000', '#aaffc3')
+
     for cluster in clusters:
         try:
             x, y = list(zip(*cluster))
         except ValueError:  # Prazdny klaster
             continue
-        plt.scatter(x, y, s=10)
+        plt.scatter(x, y, s=10, c=colors[index])
+        index += 1
 
     x, y = list(zip(*centers))
     plt.scatter(x, y, c='k', marker='x')
@@ -78,12 +84,12 @@ def calculate_centroids(clusters):
     return centroids
 
 
-def kmeans_centroid(dots: list, k: int):
+def k_means_centroid(dots: list, k: int):
     old_centroids = generate_random_dots(k)
     clusters = assign_clusters(dots, old_centroids)
 
     while True:
-        plot_clusters(clusters, old_centroids)
+        # plot_clusters(clusters, old_centroids)
         centroids = calculate_centroids(clusters)
         clusters = assign_clusters(dots, centroids)
         if all(distance(old_centroids[i], centroids[i]) < 50 for i in range(len(centroids))):
@@ -111,7 +117,7 @@ def calculate_medoids(clusters):
     return medoids
 
 
-def kmeans_medoid(dots: list, k: int):
+def k_means_medoid(dots: list, k: int):
     old_medoids = random.sample(dots, k)
     clusters = assign_clusters(dots, old_medoids)
 
@@ -127,13 +133,21 @@ def kmeans_medoid(dots: list, k: int):
     return medoids, clusters
 
 
+def agglomerative_clustering():
+    pass
+
+
+def divisive_clustering():
+    pass
+
+
 def main():
     random.seed(57)
     dots = generate_dataset(20, 20_000)
 
     start = time.time()
-    # centers, clusters = kmeans_centroid(dots, 11)
-    centers, clusters = kmeans_medoid(dots, 11)
+    centers, clusters = k_means_centroid(dots, 11)
+    # centers, clusters = k_means_medoid(dots, 11)
 
     plot_clusters(clusters, centers)
     print(time.time() - start)
