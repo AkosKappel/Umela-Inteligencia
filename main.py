@@ -31,7 +31,7 @@ def distance(point_a, point_b):
     return np.sqrt((point_b[0] - point_a[0]) ** 2 + (point_b[1] - point_a[1]) ** 2)
 
 
-def plot_clusters(clusters, centers):
+def plot_clusters(clusters, centers, show_and_clear=True):
     for cluster in clusters:
         try:
             x, y = list(zip(*cluster))
@@ -41,8 +41,10 @@ def plot_clusters(clusters, centers):
 
     x, y = list(zip(*centers))
     plt.scatter(x, y, c='k', marker='x')
-    plt.show()
-    plt.clf()
+
+    if show_and_clear:
+        plt.show()
+        plt.clf()
 
 
 def assign_clusters(dots, centroids):
