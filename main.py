@@ -47,15 +47,15 @@ def plot_clusters(clusters, centers, show_and_clear=True):
         plt.clf()
 
 
-def assign_clusters(dots, centroids):
-    clusters = [[] for _ in range(len(centroids))]
+def assign_clusters(dots, centers):
+    clusters = [[] for _ in range(len(centers))]
     inf = np.inf
 
     for dot in dots:
         min_distance = inf
         index = 0
 
-        for i, centroid in enumerate(centroids):
+        for i, centroid in enumerate(centers):
             dist = distance(dot, centroid)
             if dist < min_distance:
                 min_distance = dist
@@ -79,35 +79,61 @@ def calculate_centroids(clusters):
 
 
 def kmeans_centroid(dots: list, k: int):
-    centroids = generate_random_dots(k)
-    clusters = assign_clusters(dots, centroids)
+    old_centroids = generate_random_dots(k)
+    clusters = assign_clusters(dots, old_centroids)
 
     while True:
-        plot_clusters(clusters, centroids)
-        new_centroids = calculate_centroids(clusters)
-        clusters = assign_clusters(dots, new_centroids)
-
-        if all(distance(centroids[i], new_centroids[i]) < 50 for i in range(len(new_centroids))):
+        plot_clusters(clusters, old_centroids)
+        centroids = calculate_centroids(clusters)
+        clusters = assign_clusters(dots, centroids)
+        if all(distance(old_centroids[i], centroids[i]) < 50 for i in range(len(centroids))):
             break
-        centroids = new_centroids
+        old_centroids = centroids
 
     return centroids, clusters
 
 
+def calculate_medoids(clusters):
+    medoids = []
+    inf = np.inf
+
+    for cluster in clusters:
+        min_distance = inf
+        medoid = None
+
+        for dot in cluster:
+            dist_sum = sum(distance(dot, other_dot) for other_dot in cluster)
+            if dist_sum < min_distance:
+                min_distance = dist_sum
+                medoid = dot
+
+        medoids.append(medoid)
+    return medoids
+
+
 def kmeans_medoid(dots: list, k: int):
-    medoids = random.sample(dots, k)
-    clusters = assign_clusters(dots, medoids)
-    # TODO
+    old_medoids = random.sample(dots, k)
+    clusters = assign_clusters(dots, old_medoids)
+
+    while True:
+        plot_clusters(clusters, old_medoids)
+        medoids = calculate_medoids(clusters)
+        clusters = assign_clusters(dots, medoids)
+
+        if all(distance(old_medoids[i], medoids[i]) < 50 for i in range(len(medoids))):
+            break
+        old_medoids = medoids
+
     return medoids, clusters
 
 
 def main():
-    random.seed(41186)
+    random.seed(57)
     dots = generate_dataset(20, 20_000)
 
     start = time.time()
-    centers, clusters = kmeans_centroid(dots, 11)
-    # centers, clusters = kmeans_medoid(dots, 5)
+    # centers, clusters = kmeans_centroid(dots, 11)
+    centers, clusters = kmeans_medoid(dots, 11)
 
     plot_clusters(clusters, centers)
     print(time.time() - start)
