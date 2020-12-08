@@ -51,12 +51,13 @@ def assign_clusters(dots, centroids):
 
 def calculate_centroids(clusters):
     centroids = []
-    for cluster in clusters:
+    for i, cluster in enumerate(clusters):
         try:
             x, y = list(zip(*cluster))
-        except ValueError:
+        except ValueError:  # Vynimka pre prazdne klastre
             continue
-        centroid = (sum(x)/len(x), sum(y)/len(y))
+        length = len(x)
+        centroid = (sum(x)/length, sum(y)/length)
         centroids.append(centroid)
     return centroids
 
@@ -65,23 +66,27 @@ def kmeans_centroid(dots: list, k: int):
     centroids = generate_random_dots(k)
     clusters = assign_clusters(dots, centroids)
 
-    for _ in range(8):
+    for _ in range(5):
         centroids = calculate_centroids(clusters)
         clusters = assign_clusters(dots, centroids)
 
     return centroids, clusters
 
 
+def kmeans_medoid(dots: list, k: int):
+    pass
+
+
 def main():
     random.seed(41186)
-    start = time.time()
+    dots = generate_dataset(20, 20_000)
 
-    dots = generate_dataset(20, 40_000)
-    centroids, clusters = kmeans_centroid(dots, 20)
+    start = time.time()
+    centroids, clusters = kmeans_centroid(dots, 11)
 
     for cluster in clusters:
         x, y = list(zip(*cluster))
-        plt.scatter(x, y)
+        plt.scatter(x, y, s=10)
 
     x, y = list(zip(*centroids))
     plt.scatter(x, y, c='k', marker='x')
@@ -90,16 +95,16 @@ def main():
     plt.show()
 
 
-# data = pd.read_csv('dataset2.csv')
+# t = time.time()
+# data = pd.read_csv('dataset1.csv')
 # X = data.iloc[:, [0, 1]].values
-# X = np.array([[5, 3], [10, 15], [15, 12], [24, 10], [30, 45],
-#               [85, 70], [71, 80], [60, 78], [55, 52], [80, 91]])
-# X = np.array(create_points(20, 40_000))
-
-# kmeans = KMeans(n_clusters=7)
+# kmeans = KMeans(n_clusters=11)
 # kmeans.fit(X)
-# plt.scatter(x, y, cmap='rainbow')
-
+# y_kmeans = kmeans.predict(X)
+# plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=10)
+# print(time.time() - t)
+# plt.show()
+# exit(0)
 
 if __name__ == '__main__':
     main()
