@@ -31,6 +31,20 @@ def distance(point_a, point_b):
     return np.sqrt((point_b[0] - point_a[0]) ** 2 + (point_b[1] - point_a[1]) ** 2)
 
 
+def plot_clusters(clusters, centers):
+    for cluster in clusters:
+        try:
+            x, y = list(zip(*cluster))
+        except ValueError:  # Prazdny klaster
+            continue
+        plt.scatter(x, y, s=10)
+
+    x, y = list(zip(*centers))
+    plt.scatter(x, y, c='k', marker='x')
+    plt.show()
+    plt.clf()
+
+
 def assign_clusters(dots, centroids):
     clusters = [[] for _ in range(len(centroids))]
     inf = np.inf
@@ -66,9 +80,14 @@ def kmeans_centroid(dots: list, k: int):
     centroids = generate_random_dots(k)
     clusters = assign_clusters(dots, centroids)
 
-    for _ in range(5):
-        centroids = calculate_centroids(clusters)
-        clusters = assign_clusters(dots, centroids)
+    while True:
+        plot_clusters(clusters, centroids)
+        new_centroids = calculate_centroids(clusters)
+        clusters = assign_clusters(dots, new_centroids)
+
+        if all(distance(centroids[i], new_centroids[i]) < 50 for i in range(len(new_centroids))):
+            break
+        centroids = new_centroids
 
     return centroids, clusters
 
@@ -88,13 +107,7 @@ def main():
     centers, clusters = kmeans_centroid(dots, 11)
     # centers, clusters = kmeans_medoid(dots, 5)
 
-    for cluster in clusters:
-        x, y = list(zip(*cluster))
-        plt.scatter(x, y, s=10)
-
-    x, y = list(zip(*centers))
-    plt.scatter(x, y, c='k', marker='x')
-
+    plot_clusters(clusters, centers)
     print(time.time() - start)
     plt.show()
 
