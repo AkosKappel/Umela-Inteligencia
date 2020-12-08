@@ -74,7 +74,10 @@ def kmeans_centroid(dots: list, k: int):
 
 
 def kmeans_medoid(dots: list, k: int):
-    pass
+    medoids = random.sample(dots, k)
+    clusters = assign_clusters(dots, medoids)
+    # TODO
+    return medoids, clusters
 
 
 def main():
@@ -82,13 +85,14 @@ def main():
     dots = generate_dataset(20, 20_000)
 
     start = time.time()
-    centroids, clusters = kmeans_centroid(dots, 11)
+    centers, clusters = kmeans_centroid(dots, 11)
+    # centers, clusters = kmeans_medoid(dots, 5)
 
     for cluster in clusters:
         x, y = list(zip(*cluster))
         plt.scatter(x, y, s=10)
 
-    x, y = list(zip(*centroids))
+    x, y = list(zip(*centers))
     plt.scatter(x, y, c='k', marker='x')
 
     print(time.time() - start)
