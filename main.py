@@ -87,16 +87,16 @@ def calculate_centroids(clusters):
 
 
 def k_means_centroid(dots: list, k: int):
-    old_centroids = generate_random_dots(k)
-    clusters = assign_clusters(dots, old_centroids)
+    prev_centroids = generate_random_dots(k)
+    clusters = assign_clusters(dots, prev_centroids)
 
     while True:
-        # plot_clusters(clusters, old_centroids)
+        # plot_clusters(clusters, prev_centroids)
         centroids = calculate_centroids(clusters)
         clusters = assign_clusters(dots, centroids)
-        if all(distance(old_centroids[i], centroids[i]) < 50 for i in range(len(centroids))):
+        if all(distance(prev_centroids[i], centroids[i]) < 50 for i in range(len(centroids))):
             break
-        old_centroids = centroids
+        prev_centroids = centroids
 
     return centroids, clusters
 
@@ -120,22 +120,22 @@ def calculate_medoids(clusters):
 
 
 def k_means_medoid(dots: list, k: int):
-    old_medoids = random.sample(dots, k)
-    clusters = assign_clusters(dots, old_medoids)
+    prev_medoids = random.sample(dots, k)
+    clusters = assign_clusters(dots, prev_medoids)
 
     while True:
-        plot_clusters(clusters, old_medoids)
+        plot_clusters(clusters, prev_medoids)
         medoids = calculate_medoids(clusters)
         clusters = assign_clusters(dots, medoids)
-        if all(distance(old_medoids[i], medoids[i]) < 50 for i in range(len(medoids))):
+        if not any(distance(prev_medoids[i], medoids[i]) > 50 for i in range(len(medoids))):
             break
-        old_medoids = medoids
+        prev_medoids = medoids
 
     return medoids, clusters
 
 
 def agglomerative_clustering(dots):
-    clusters = dots
+    clusters = [[dot] for dot in dots]
 
 
 def divisive_clustering(dots):
@@ -147,8 +147,8 @@ def main():
     dots = generate_dataset(20, 20_000)
 
     start = time.time()
-    centers, clusters = k_means_centroid(dots, 11)
-    # centers, clusters = k_means_medoid(dots, 11)
+    # centers, clusters = k_means_centroid(dots, 11)
+    centers, clusters = k_means_medoid(dots, 11)
 
     plot_clusters(clusters, centers)
     print(time.time() - start)
