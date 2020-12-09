@@ -197,22 +197,28 @@ def agglomerative_clustering(dots: list, k: int):
     return clusters
 
 
+def get_cluster_size(cluster):
+    try:
+        x, y = map(list, zip(*cluster))
+    except ValueError:  # Prazdny klaster
+        return 0
+
+    x.sort()
+    y.sort()
+
+    main_diagonal = euclidean_distance((x[0], y[-1]), (x[-1], y[0]))  # Z laveho horneho rohu do praveho dolneho
+    anti_diagonal = euclidean_distance((x[-1], y[-1]), (x[0], y[0]))  # Z praveho horneho rohu do laveho dolneho
+
+    intra_cluster_size = max(main_diagonal, anti_diagonal)
+    return intra_cluster_size
+
+
 def get_largest_cluster(clusters):
     largest = None
     intra_cluster_size = 0
 
     for cluster in clusters:
-        try:
-            x, y = map(list, zip(*cluster))
-        except ValueError:  # Prazdny klaster
-            continue
-        x.sort()
-        y.sort()
-
-        main_diagonal = euclidean_distance((x[0], y[-1]), (x[-1], y[0]))  # Z laveho horneho rohu do praveho dolneho
-        anti_diagonal = euclidean_distance((x[-1], y[-1]), (x[0], y[0]))  # Z praveho horneho rohu do laveho dolneho
-        size = max(main_diagonal, anti_diagonal)
-
+        size = get_cluster_size(cluster)
         if size > intra_cluster_size:
             intra_cluster_size = size
             largest = cluster
@@ -231,7 +237,7 @@ def divisive_clustering(dots: list, k: int):
         _, cluster = k_means_centroid(cluster, 2)
         clusters.insert(index, cluster[0])
         clusters.append(cluster[-1])
-        plot_clusters(clusters)
+        # plot_clusters(clusters)
 
     return clusters
 
