@@ -2,8 +2,8 @@ __author__ = 'Akos Kappel'
 __version__ = '1.0'
 
 from matplotlib import pyplot as plt
-# from sklearn.cluster import KMeans
-# import pandas as pd
+from sklearn.cluster import KMeans, AgglomerativeClustering
+import pandas as pd
 import numpy as np
 import random
 import time
@@ -31,7 +31,7 @@ def distance(point_a, point_b):
     return np.sqrt((point_b[0] - point_a[0]) ** 2 + (point_b[1] - point_a[1]) ** 2)
 
 
-def plot_clusters(clusters, centers, show_and_clear=True):
+def plot_clusters(clusters, centers=None, show_and_clear=True):
     index = 0
     colors = ('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
               '#7f7f7f', '#bcbd22', '#17becf', '#ffe119', '#4363d8', '#911eb4', '#bcf60c',
@@ -44,9 +44,11 @@ def plot_clusters(clusters, centers, show_and_clear=True):
             continue
         plt.scatter(x, y, s=10, c=colors[index])
         index += 1
+        index %= len(colors)
 
-    x, y = list(zip(*centers))
-    plt.scatter(x, y, c='k', marker='x')
+    if centers:
+        x, y = list(zip(*centers))
+        plt.scatter(x, y, c='k', marker='x')
 
     if show_and_clear:
         plt.show()
@@ -73,7 +75,7 @@ def assign_clusters(dots, centers):
 
 def calculate_centroids(clusters):
     centroids = []
-    for i, cluster in enumerate(clusters):
+    for cluster in clusters:
         try:
             x, y = list(zip(*cluster))
         except ValueError:  # Vynimka pre prazdne klastre
@@ -104,13 +106,13 @@ def calculate_medoids(clusters):
     inf = np.inf
 
     for cluster in clusters:
-        min_distance = inf
+        min_distance_sum = inf
         medoid = None
 
         for dot in cluster:
             dist_sum = sum(distance(dot, other_dot) for other_dot in cluster)
-            if dist_sum < min_distance:
-                min_distance = dist_sum
+            if dist_sum < min_distance_sum:
+                min_distance_sum = dist_sum
                 medoid = dot
 
         medoids.append(medoid)
@@ -125,7 +127,6 @@ def k_means_medoid(dots: list, k: int):
         plot_clusters(clusters, old_medoids)
         medoids = calculate_medoids(clusters)
         clusters = assign_clusters(dots, medoids)
-
         if all(distance(old_medoids[i], medoids[i]) < 50 for i in range(len(medoids))):
             break
         old_medoids = medoids
@@ -133,16 +134,16 @@ def k_means_medoid(dots: list, k: int):
     return medoids, clusters
 
 
-def agglomerative_clustering():
-    pass
+def agglomerative_clustering(dots):
+    clusters = dots
 
 
-def divisive_clustering():
-    pass
+def divisive_clustering(dots):
+    clusters = [dots]
 
 
 def main():
-    random.seed(57)
+    random.seed(44)
     dots = generate_dataset(20, 20_000)
 
     start = time.time()
