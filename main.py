@@ -206,6 +206,8 @@ def get_largest_cluster(clusters):
             x, y = map(list, zip(*cluster))
         except ValueError:  # Prazdny klaster
             continue
+        x.sort()
+        y.sort()
 
         main_diagonal = euclidean_distance((x[0], y[-1]), (x[-1], y[0]))  # Z laveho horneho rohu do praveho dolneho
         anti_diagonal = euclidean_distance((x[-1], y[-1]), (x[0], y[0]))  # Z praveho horneho rohu do laveho dolneho
@@ -235,17 +237,17 @@ def divisive_clustering(dots: list, k: int):
 
 
 def main():
-    random.seed(44)
+    random.seed(55)
     dots = generate_dataset(20, 20000)
 
     start = time.time()
-    centers, clusters = k_means_centroid(dots, 11)
+    # centers, clusters = k_means_centroid(dots, 11)
     # centers, clusters = k_means_medoid(dots, 11)
-    plot_clusters(clusters, centers)
+    # plot_clusters(clusters, centers)
 
     # clusters = agglomerative_clustering(dots, 11)
-    # clusters = divisive_clustering(dots, 7)
-    # plot_clusters(clusters)
+    clusters = divisive_clustering(dots, 7)
+    plot_clusters(clusters)
 
     print(time.time() - start)
     plt.show()
