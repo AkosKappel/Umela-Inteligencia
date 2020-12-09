@@ -4,22 +4,19 @@ __version__ = '1.0'
 from matplotlib import pyplot as plt
 # from sklearn.cluster import KMeans, AgglomerativeClustering
 # import pandas as pd
-from collections import deque
+# from collections import deque
 import numpy as np
 import random
 import time
 
 
-min_value, max_value = -5000, 5000  # Interval suradnic nahodnych bodov v 2D priestore
-min_offset, max_offset = -100, 100  # Interval odchylok od ostatnych bodov
-
-
-def generate_random_dots(count: int):
-    return [(random.randint(min_value, max_value), random.randint(min_value, max_value)) for _ in range(count)]
+def generate_random_dots(count: int, min_range=-5000, max_range=5000):
+    return [(random.randint(min_range, max_range), random.randint(min_range, max_range)) for _ in range(count)]
 
 
 def generate_dataset(n_main_dots: int, n_nearby_dots: int):
     dots = generate_random_dots(n_main_dots)
+    min_offset, max_offset = -100, 100
     for _ in range(n_nearby_dots):
         dot = random.choice(dots)
         x_offset, y_offset = random.randint(min_offset, max_offset), random.randint(min_offset, max_offset)
@@ -98,8 +95,13 @@ def k_means_centroid(dots: list, k: int):
     while True:
         # plot_clusters(clusters, prev_centroids)
         centroids = calculate_centroids(clusters)
+        n_empty_clusters = len(prev_centroids) - len(centroids)
+        if n_empty_clusters != 0:
+            new_centroids = generate_random_dots(n_empty_clusters)
+            centroids.extend(new_centroids)
+
         clusters = assign_clusters(dots, centroids)
-        if all(euclidean_distance(prev_centroids[i], centroids[i]) < 50 for i in range(len(centroids))):
+        if not any(euclidean_distance(prev_centroids[i], centroids[i]) > 50 for i in range(len(centroids))):
             break
         prev_centroids = centroids
 
@@ -195,13 +197,38 @@ def agglomerative_clustering(dots: list, k: int):
     return clusters
 
 
+def get_largest_cluster(clusters):
+    largest = None
+    intra_cluster_size = 0
+
+    for cluster in clusters:
+        try:
+            x, y = map(list, zip(*cluster))
+        except ValueError:  # Prazdny klaster
+            continue
+
+        main_diagonal = euclidean_distance((x[0], y[-1]), (x[-1], y[0]))  # Z laveho horneho rohu do praveho dolneho
+        anti_diagonal = euclidean_distance((x[-1], y[-1]), (x[0], y[0]))  # Z praveho horneho rohu do laveho dolneho
+        size = max(main_diagonal, anti_diagonal)
+
+        if size > intra_cluster_size:
+            intra_cluster_size = size
+            largest = cluster
+
+    return largest
+
+
 def divisive_clustering(dots: list, k: int):
-    clusters = deque([dots])
+    clusters = [dots]
 
     while len(clusters) < k:
-        cluster = clusters.popleft()
+        cluster = get_largest_cluster(clusters)
+        index = clusters.index(cluster)
+        clusters.remove(cluster)
+
         _, cluster = k_means_centroid(cluster, 2)
-        clusters.extend(cluster)
+        clusters.insert(index, cluster[0])
+        clusters.append(cluster[-1])
         plot_clusters(clusters)
 
     return clusters
@@ -212,14 +239,14 @@ def main():
     dots = generate_dataset(20, 20000)
 
     start = time.time()
-    # centers, clusters = k_means_centroid(dots, 11)
+    centers, clusters = k_means_centroid(dots, 11)
     # centers, clusters = k_means_medoid(dots, 11)
+    plot_clusters(clusters, centers)
 
-    clusters = divisive_clustering(dots, 7)
     # clusters = agglomerative_clustering(dots, 11)
-    plot_clusters(clusters)
+    # clusters = divisive_clustering(dots, 7)
+    # plot_clusters(clusters)
 
-    # plot_clusters(clusters, centers)
     print(time.time() - start)
     plt.show()
 
