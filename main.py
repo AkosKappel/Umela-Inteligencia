@@ -4,6 +4,7 @@ __version__ = '1.0'
 from matplotlib import pyplot as plt
 # from sklearn.cluster import KMeans, AgglomerativeClustering
 # import pandas as pd
+from collections import deque
 import numpy as np
 import random
 import time
@@ -27,8 +28,12 @@ def generate_dataset(n_main_dots: int, n_nearby_dots: int):
     return dots
 
 
-def distance(point_a, point_b):
+def euclidean_distance(point_a, point_b):
     return int(np.sqrt((point_b[0] - point_a[0]) ** 2 + (point_b[1] - point_a[1]) ** 2))
+
+
+def manhattan_distance(point_a, point_b):
+    return abs(point_b[0] - point_a[0]) + abs(point_b[1] - point_a[1])
 
 
 def plot_clusters(clusters, centers=None, show_and_clear=True):
@@ -64,7 +69,7 @@ def assign_clusters(dots, centers):
         index = 0
 
         for i, centroid in enumerate(centers):
-            dist = distance(dot, centroid)
+            dist = euclidean_distance(dot, centroid)
             if dist < min_distance:
                 min_distance = dist
                 index = i
@@ -94,7 +99,7 @@ def k_means_centroid(dots: list, k: int):
         # plot_clusters(clusters, prev_centroids)
         centroids = calculate_centroids(clusters)
         clusters = assign_clusters(dots, centroids)
-        if all(distance(prev_centroids[i], centroids[i]) < 50 for i in range(len(centroids))):
+        if all(euclidean_distance(prev_centroids[i], centroids[i]) < 50 for i in range(len(centroids))):
             break
         prev_centroids = centroids
 
@@ -110,7 +115,7 @@ def calculate_medoids(clusters):
         medoid = None
 
         for dot in cluster:
-            dist_sum = sum(distance(dot, other_dot) for other_dot in cluster)
+            dist_sum = sum(euclidean_distance(dot, other_dot) for other_dot in cluster)
             if dist_sum < min_distance_sum:
                 min_distance_sum = dist_sum
                 medoid = dot
@@ -127,7 +132,7 @@ def k_means_medoid(dots: list, k: int):
         plot_clusters(clusters, prev_medoids)
         medoids = calculate_medoids(clusters)
         clusters = assign_clusters(dots, medoids)
-        if not any(distance(prev_medoids[i], medoids[i]) > 50 for i in range(len(medoids))):
+        if not any(euclidean_distance(prev_medoids[i], medoids[i]) > 50 for i in range(len(medoids))):
             break
         prev_medoids = medoids
 
@@ -139,7 +144,7 @@ def calculate_distance_matrix(dots):
     for i, dot in enumerate(dots):
         matrix.append([])
         for j in range(i):
-            matrix[i].append(distance(dot, dots[j]))
+            matrix[i].append(euclidean_distance(dot, dots[j]))
     return matrix
 
 
@@ -185,23 +190,33 @@ def agglomerative_clustering(dots: list, k: int):
         centroid = calculate_centroid(*cluster_1, *cluster_2)
         dist_matrix.append([])
         for dot in dots:
-            dist_matrix[-1].append(distance(centroid, dot))
+            dist_matrix[-1].append(euclidean_distance(centroid, dot))
 
     return clusters
 
 
-def divisive_clustering(dots):
-    clusters = [dots]
+def divisive_clustering(dots: list, k: int):
+    clusters = deque([dots])
+
+    while len(clusters) < k:
+        cluster = clusters.popleft()
+        _, cluster = k_means_centroid(cluster, 2)
+        clusters.extend(cluster)
+        plot_clusters(clusters)
+
+    return clusters
 
 
 def main():
     random.seed(44)
-    dots = generate_dataset(20, 100)
+    dots = generate_dataset(20, 20000)
 
     start = time.time()
     # centers, clusters = k_means_centroid(dots, 11)
     # centers, clusters = k_means_medoid(dots, 11)
-    clusters = agglomerative_clustering(dots, 11)
+
+    clusters = divisive_clustering(dots, 7)
+    # clusters = agglomerative_clustering(dots, 11)
     plot_clusters(clusters)
 
     # plot_clusters(clusters, centers)
