@@ -2,8 +2,8 @@ __author__ = 'Akos Kappel'
 __version__ = '1.0'
 
 from matplotlib import pyplot as plt
-from sklearn.cluster import KMeans, AgglomerativeClustering
-import pandas as pd
+# from sklearn.cluster import KMeans, AgglomerativeClustering
+# import pandas as pd
 import numpy as np
 import random
 import time
@@ -28,7 +28,7 @@ def generate_dataset(n_main_dots: int, n_nearby_dots: int):
 
 
 def distance(point_a, point_b):
-    return np.sqrt((point_b[0] - point_a[0]) ** 2 + (point_b[1] - point_a[1]) ** 2)
+    return int(np.sqrt((point_b[0] - point_a[0]) ** 2 + (point_b[1] - point_a[1]) ** 2))
 
 
 def plot_clusters(clusters, centers=None, show_and_clear=True):
@@ -81,7 +81,7 @@ def calculate_centroids(clusters):
         except ValueError:  # Vynimka pre prazdne klastre
             continue
         length = len(x)
-        centroid = (sum(x)/length, sum(y)/length)
+        centroid = (int(sum(x)/length), int(sum(y)/length))
         centroids.append(centroid)
     return centroids
 
@@ -134,8 +134,60 @@ def k_means_medoid(dots: list, k: int):
     return medoids, clusters
 
 
-def agglomerative_clustering(dots):
+def calculate_distance_matrix(dots):
+    matrix = []
+    for i, dot in enumerate(dots):
+        matrix.append([])
+        for j in range(i):
+            matrix[i].append(distance(dot, dots[j]))
+    return matrix
+
+
+def find_closest_dots(distance_matrix):
+    min_dist = np.inf
+    index_1, index_2 = None, None
+
+    for i, row in enumerate(distance_matrix):
+        for j, num in enumerate(row):
+            if num < min_dist:
+                min_dist = num
+                index_1, index_2 = i, j
+
+    return index_1, index_2
+
+
+def calculate_centroid(*dots):
+    x, y = list(zip(*dots))
+    length = len(x)
+    return int(sum(x)/length), int(sum(y)/length)
+
+
+def agglomerative_clustering(dots: list, k: int):
+    t = time.time()
     clusters = [[dot] for dot in dots]
+    dist_matrix = calculate_distance_matrix(dots)
+    print(time.time() - t)
+
+    for _ in range(len(dots) - k):
+        index_1, index_2 = find_closest_dots(dist_matrix)
+
+        dist_matrix.pop(index_1)
+        for i in range(index_1 + 1, len(dist_matrix)):
+            dist_matrix[i].pop(index_1)
+
+        dist_matrix.pop(index_2)
+        for i in range(index_2 + 1, len(dist_matrix)):
+            dist_matrix[i].pop(index_2)
+
+        cluster_1, cluster_2 = clusters.pop(index_1), clusters.pop(index_2)
+        clusters.append(cluster_1 + cluster_2)
+
+        centroid = calculate_centroid(*cluster_1, *cluster_2)
+        dist_matrix.append([])
+        for dot in dots:
+            dist_matrix[-1].append(distance(centroid, dot))
+
+    return clusters
 
 
 def divisive_clustering(dots):
@@ -144,13 +196,15 @@ def divisive_clustering(dots):
 
 def main():
     random.seed(44)
-    dots = generate_dataset(20, 20_000)
+    dots = generate_dataset(20, 100)
 
     start = time.time()
     # centers, clusters = k_means_centroid(dots, 11)
-    centers, clusters = k_means_medoid(dots, 11)
+    # centers, clusters = k_means_medoid(dots, 11)
+    clusters = agglomerative_clustering(dots, 11)
+    plot_clusters(clusters)
 
-    plot_clusters(clusters, centers)
+    # plot_clusters(clusters, centers)
     print(time.time() - start)
     plt.show()
 
