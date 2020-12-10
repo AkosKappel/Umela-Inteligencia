@@ -179,12 +179,10 @@ def agglomerative_clustering(dots: list, k: int):
         dist_matrix[index_1].pop(index_2)  # Odstranime najmensiu najdenu vzdialenost
 
         distance_1 = dist_matrix.pop(index_1)
-        for i in range(index_1, len(dist_matrix)):
-            distance_1.append(dist_matrix[i].pop(index_1))
+        distance_1.extend([dist_matrix[i].pop(index_1) for i in range(index_1, len(dist_matrix))])
 
         distance_2 = dist_matrix.pop(index_2)
-        for i in range(index_2, len(dist_matrix)):
-            distance_2.append(dist_matrix[i].pop(index_2))
+        distance_2.extend([dist_matrix[i].pop(index_2) for i in range(index_2, len(dist_matrix))])
 
         new_row = [min(d1, distance_2[i]) for i, d1 in enumerate(distance_1)]
         dist_matrix.append(new_row)
@@ -239,6 +237,39 @@ def divisive_clustering(dots: list, k: int):
         # plot_clusters(clusters)
 
     return clusters
+
+
+def set_clustering_method() -> int:
+    print('Vyberte ktory algoritmus sa ma pouzit na klastrovanie:',
+          '1 - k-means',
+          '2 - k-medoids',
+          '3 - aglomerativne zhlukovanie',
+          '4 - divizivne zhlukovanie', sep='\n')
+
+    while True:
+        clustering_method = input('Zadajte cislo moznosti > ')
+        try:
+            clustering_method = int(clustering_method)
+            if clustering_method in (1, 2, 3, 4):
+                break
+            raise ValueError
+        except ValueError:
+            print(f'Zvolena moznost {clustering_method} neexistuje.')
+
+    return clustering_method
+
+
+def set_k() -> int:
+    while True:
+        k = input('Zadajte hodnotu K > ')
+        try:
+            k = int(k)
+            if k > 0:
+                break
+            raise ValueError
+        except ValueError:
+            print('Zvolena hodnota K musi byt kladne cele cislo.')
+    return k
 
 
 def main():
