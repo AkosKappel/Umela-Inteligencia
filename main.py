@@ -4,7 +4,6 @@ __version__ = '1.0'
 from matplotlib import pyplot as plt
 # from sklearn.cluster import KMeans, AgglomerativeClustering
 # import pandas as pd
-# from collections import deque
 import numpy as np
 import random
 import time
@@ -143,10 +142,9 @@ def k_means_medoid(dots: list, k: int):
 
 def calculate_distance_matrix(dots):
     matrix = []
+    append = matrix.append
     for i, dot in enumerate(dots):
-        matrix.append([])
-        for j in range(i):
-            matrix[i].append(manhattan_distance(dot, dots[j]))
+        append([manhattan_distance(dot, dots[j]) for j in range(i)])
     return matrix
 
 
@@ -213,12 +211,12 @@ def get_cluster_size(cluster):
 
 def get_largest_cluster(clusters):
     largest = None
-    intra_cluster_size = 0
+    max_size = 0
 
     for cluster in clusters:
         size = get_cluster_size(cluster)
-        if size > intra_cluster_size:
-            intra_cluster_size = size
+        if size > max_size:
+            max_size = size
             largest = cluster
 
     return largest
@@ -246,12 +244,12 @@ def main():
 
     start = time.time()
     # centers, clusters = k_means_centroid(dots, 11)
-    # centers, clusters = k_means_medoid(dots, 11)
-    # plot_clusters(clusters, centers)
+    centers, clusters = k_means_medoid(dots, 11)
+    plot_clusters(clusters, centers)
 
-    clusters = agglomerative_clustering(dots, 11)
+    # clusters = agglomerative_clustering(dots, 11)
     # clusters = divisive_clustering(dots, 7)
-    plot_clusters(clusters)
+    # plot_clusters(clusters)
 
     print(time.time() - start)
     plt.show()
