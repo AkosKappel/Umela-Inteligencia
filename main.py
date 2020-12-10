@@ -146,7 +146,7 @@ def calculate_distance_matrix(dots):
     for i, dot in enumerate(dots):
         matrix.append([])
         for j in range(i):
-            matrix[i].append(euclidean_distance(dot, dots[j]))
+            matrix[i].append(manhattan_distance(dot, dots[j]))
     return matrix
 
 
@@ -170,29 +170,27 @@ def calculate_centroid(*dots):
 
 
 def agglomerative_clustering(dots: list, k: int):
-    t = time.time()
     clusters = [[dot] for dot in dots]
     dist_matrix = calculate_distance_matrix(dots)
-    print(time.time() - t)
 
     for _ in range(len(dots) - k):
         index_1, index_2 = find_closest_dots(dist_matrix)
+        dist_matrix[index_1].pop(index_2)  # Odstranime najmensiu najdenu vzdialenost
 
-        dist_matrix.pop(index_1)
-        for i in range(index_1 + 1, len(dist_matrix)):
-            dist_matrix[i].pop(index_1)
+        distance_1 = dist_matrix.pop(index_1)
+        for i in range(index_1, len(dist_matrix)):
+            distance_1.append(dist_matrix[i].pop(index_1))
 
-        dist_matrix.pop(index_2)
-        for i in range(index_2 + 1, len(dist_matrix)):
-            dist_matrix[i].pop(index_2)
+        distance_2 = dist_matrix.pop(index_2)
+        for i in range(index_2, len(dist_matrix)):
+            distance_2.append(dist_matrix[i].pop(index_2))
 
+        new_row = [min(d1, distance_2[i]) for i, d1 in enumerate(distance_1)]
+        dist_matrix.append(new_row)
+
+        # Spojime dva klastre do jedneho
         cluster_1, cluster_2 = clusters.pop(index_1), clusters.pop(index_2)
         clusters.append(cluster_1 + cluster_2)
-
-        centroid = calculate_centroid(*cluster_1, *cluster_2)
-        dist_matrix.append([])
-        for dot in dots:
-            dist_matrix[-1].append(euclidean_distance(centroid, dot))
 
     return clusters
 
@@ -243,16 +241,16 @@ def divisive_clustering(dots: list, k: int):
 
 
 def main():
-    random.seed(55)
-    dots = generate_dataset(20, 20000)
+    random.seed(99)
+    dots = generate_dataset(20, 5000)
 
     start = time.time()
     # centers, clusters = k_means_centroid(dots, 11)
     # centers, clusters = k_means_medoid(dots, 11)
     # plot_clusters(clusters, centers)
 
-    # clusters = agglomerative_clustering(dots, 11)
-    clusters = divisive_clustering(dots, 7)
+    clusters = agglomerative_clustering(dots, 11)
+    # clusters = divisive_clustering(dots, 7)
     plot_clusters(clusters)
 
     print(time.time() - start)
