@@ -153,10 +153,13 @@ def find_closest_dots(distance_matrix):
     index_1, index_2 = None, None
 
     for i, row in enumerate(distance_matrix):
-        for j, num in enumerate(row):
-            if num < min_dist:
-                min_dist = num
-                index_1, index_2 = i, j
+        try:
+            dist = min(row)
+        except ValueError:  # Vynimka pre prazdny zoznam
+            continue
+        if dist < min_dist:
+            min_dist = dist
+            index_1, index_2 = i, row.index(dist)
 
     return index_1, index_2
 
@@ -240,16 +243,16 @@ def divisive_clustering(dots: list, k: int):
 
 def main():
     random.seed(99)
-    dots = generate_dataset(20, 5000)
+    dots = generate_dataset(20, 1000)
 
     start = time.time()
     # centers, clusters = k_means_centroid(dots, 11)
-    centers, clusters = k_means_medoid(dots, 11)
-    plot_clusters(clusters, centers)
+    # centers, clusters = k_means_medoid(dots, 11)
+    # plot_clusters(clusters, centers)
 
-    # clusters = agglomerative_clustering(dots, 11)
+    clusters = agglomerative_clustering(dots, 11)
     # clusters = divisive_clustering(dots, 7)
-    # plot_clusters(clusters)
+    plot_clusters(clusters)
 
     print(time.time() - start)
     plt.show()
