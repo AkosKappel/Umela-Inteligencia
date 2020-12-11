@@ -107,7 +107,8 @@ def k_means_centroid(dots: list, k: int):
             centroids.extend(new_centroids)
 
         clusters = assign_clusters(dots, centroids)
-        if not any(euclidean_distance(prev_centroids[i], centroids[i]) > 50 for i in range(len(centroids))):
+        if not any(euclidean_distance(prev_centroids[i], centroids[i]) > 50 for i in range(len(centroids))) \
+                and all(len(cluster) > 0 for cluster in clusters):
             break
         prev_centroids = centroids
 
@@ -198,7 +199,8 @@ def agglomerative_clustering(dots: list, k: int):
         cluster_1, cluster_2 = clusters.pop(index_1), clusters.pop(index_2)
         clusters.append(cluster_1 + cluster_2)
 
-    return clusters
+    centroids = calculate_centroids(clusters)
+    return centroids, clusters
 
 
 def get_cluster_size(cluster):
@@ -243,7 +245,8 @@ def divisive_clustering(dots: list, k: int):
         clusters.append(cluster[-1])
         # plot_clusters(clusters)
 
-    return clusters
+    centroids = calculate_centroids(clusters)
+    return centroids, clusters
 
 
 def set_clustering_method() -> int:
@@ -308,23 +311,21 @@ def reconstruct_image(dots, clusters, scale_factor=50):
 
 def main():
     random.seed(11)
-    dots = generate_dataset(20, 20000)
+    dots = generate_dataset(20, 20_000)
     start = time.time()
 
     scaled_dots = scale_down(dots)
 
-    centers, clusters = k_means_centroid(scaled_dots, 20)
+    # centers, clusters = k_means_centroid(scaled_dots, 15)
+    # centers, clusters = k_means_medoid(scaled_dots, 15)
+    # centers, clusters = agglomerative_clustering(scaled_dots, 15)
+    centers, clusters = divisive_clustering(scaled_dots, 15)
+
     clusters = reconstruct_image(dots, clusters)
     centers = scale_up(centers)
-    # centers, clusters = k_means_medoid(dots, 11)
-    plot_clusters(clusters, centers)
-
-    # clusters = agglomerative_clustering(scaled_dots, 11)
-    # clusters = reconstruct_image(dots, clusters)
-    # clusters = divisive_clustering(dots, 20)
-    # plot_clusters(clusters)
 
     print(time.time() - start)
+    plot_clusters(clusters, centers)
 
 
 if __name__ == '__main__':
