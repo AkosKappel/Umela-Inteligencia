@@ -74,6 +74,14 @@ def assign_clusters(dots, centers):
     return clusters
 
 
+def get_plane_resolution(dots):
+    try:
+        x, y = map(list, zip(*dots))
+    except ValueError:  # Prazdny klaster
+        return 0, 0
+    return min(*x, *y), max(*x, *y)
+
+
 def calculate_centroids(clusters):
     centroids = []
     for cluster in clusters:
@@ -88,7 +96,8 @@ def calculate_centroids(clusters):
 
 
 def k_means_centroid(dots: list, k: int):
-    prev_centroids = generate_random_dots(k)
+    min_range, max_range = get_plane_resolution(dots)
+    prev_centroids = generate_random_dots(k, min_range, max_range)
     clusters = assign_clusters(dots, prev_centroids)
 
     while True:
@@ -96,7 +105,7 @@ def k_means_centroid(dots: list, k: int):
         centroids = calculate_centroids(clusters)
         n_empty_clusters = len(prev_centroids) - len(centroids)
         if n_empty_clusters != 0:
-            new_centroids = generate_random_dots(n_empty_clusters)
+            new_centroids = generate_random_dots(n_empty_clusters, min_range, max_range)
             centroids.extend(new_centroids)
 
         clusters = assign_clusters(dots, centroids)
@@ -273,17 +282,41 @@ def set_k() -> int:
 
 
 def main():
-    random.seed(99)
-    dots = generate_dataset(20, 1000)
+    random.seed(11)
+    dots = generate_dataset(20, 20000)
+
+    # TODO resize dots
+    # x, y = list(zip(*dots))
+    # plt.scatter(x, y)
+    # plt.show()
+    # plt.clf()
+    #
+    # x = list(map(lambda n: int(n/50), x))
+    # y = list(map(lambda n: int(n/50), y))
+    # dots = list(set(zip(x, y)))
+    #
+    # x, y = list(zip(*dots))
+    # x = list(map(lambda n: n*50, x))
+    # y = list(map(lambda n: n*50, y))
+    #
+    # plt.scatter(x, y)
+    # plt.show()
+    # plt.clf()
+    #
+    # dots = list(zip(x, y))
+    #
+    # print(len(dots), len(set(dots)))
+    #
+    # exit(0)
 
     start = time.time()
-    # centers, clusters = k_means_centroid(dots, 11)
+    centers, clusters = k_means_centroid(dots, 20)
     # centers, clusters = k_means_medoid(dots, 11)
-    # plot_clusters(clusters, centers)
+    plot_clusters(clusters, centers)
 
-    clusters = agglomerative_clustering(dots, 11)
-    # clusters = divisive_clustering(dots, 7)
-    plot_clusters(clusters)
+    # clusters = agglomerative_clustering(dots, 11)
+    # clusters = divisive_clustering(dots, 20)
+    # plot_clusters(clusters)
 
     print(time.time() - start)
     plt.show()
