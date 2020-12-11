@@ -2,8 +2,6 @@ __author__ = 'Akos Kappel'
 __version__ = '1.0'
 
 from matplotlib import pyplot as plt
-# from sklearn.cluster import KMeans, AgglomerativeClustering
-# import pandas as pd
 import numpy as np
 import random
 import time
@@ -328,17 +326,6 @@ def main():
 
     print(time.time() - start)
 
-
-# t = time.time()
-# data = pd.read_csv('dataset1.csv')
-# X = data.iloc[:, [0, 1]].values
-# kmeans = KMeans(n_clusters=11)
-# kmeans.fit(X)
-# y_kmeans = kmeans.predict(X)
-# plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=10)
-# print(time.time() - t)
-# plt.show()
-# exit(0)
 
 if __name__ == '__main__':
     main()
