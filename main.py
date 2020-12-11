@@ -101,13 +101,12 @@ def k_means_centroid(dots: list, k: int):
     while True:
         # plot_clusters(clusters, prev_centroids)
         centroids = calculate_centroids(clusters)
-        n_empty_clusters = len(prev_centroids) - len(centroids)
-        if n_empty_clusters != 0:
-            new_centroids = generate_random_dots(n_empty_clusters, min_range, max_range)
+        if len(centroids) != k:
+            new_centroids = generate_random_dots(k - len(centroids), min_range, max_range)
             centroids.extend(new_centroids)
 
         clusters = assign_clusters(dots, centroids)
-        if not any(euclidean_distance(prev_centroids[i], centroids[i]) > 50 for i in range(len(centroids))) \
+        if not any(euclidean_distance(prev_centroids[i], centroid) > 100 for i, centroid in enumerate(centroids)) \
                 and all(len(cluster) > 0 for cluster in clusters):
             break
         prev_centroids = centroids
@@ -138,10 +137,10 @@ def k_means_medoid(dots: list, k: int):
     clusters = assign_clusters(dots, prev_medoids)
 
     while True:
-        plot_clusters(clusters, prev_medoids)
+        # plot_clusters(clusters, prev_medoids)
         medoids = calculate_medoids(clusters)
         clusters = assign_clusters(dots, medoids)
-        if not any(euclidean_distance(prev_medoids[i], medoids[i]) > 50 for i in range(len(medoids))):
+        if not any(euclidean_distance(prev_medoids[i], medoid) > 100 for i, medoid in enumerate(medoids)):
             break
         prev_medoids = medoids
 
@@ -199,8 +198,7 @@ def agglomerative_clustering(dots: list, k: int):
         cluster_1, cluster_2 = clusters.pop(index_1), clusters.pop(index_2)
         clusters.append(cluster_1 + cluster_2)
 
-    centroids = calculate_centroids(clusters)
-    return centroids, clusters
+    return clusters
 
 
 def get_cluster_size(cluster):
@@ -245,8 +243,7 @@ def divisive_clustering(dots: list, k: int):
         clusters.append(cluster[-1])
         # plot_clusters(clusters)
 
-    centroids = calculate_centroids(clusters)
-    return centroids, clusters
+    return clusters
 
 
 def set_clustering_method() -> int:
@@ -310,21 +307,33 @@ def reconstruct_image(dots, clusters, scale_factor=50):
 
 
 def main():
-    random.seed(11)
+    random.seed(44)
     dots = generate_dataset(20, 20_000)
+
+    method = set_clustering_method()
+    k = set_k()
     start = time.time()
 
-    scaled_dots = scale_down(dots)
+    if method == 1:
+        centers, clusters = k_means_centroid(dots, k)
 
-    # centers, clusters = k_means_centroid(scaled_dots, 15)
-    # centers, clusters = k_means_medoid(scaled_dots, 15)
-    # centers, clusters = agglomerative_clustering(scaled_dots, 15)
-    centers, clusters = divisive_clustering(scaled_dots, 15)
+    elif method == 2:
+        centers, clusters = k_means_medoid(dots, k)
 
-    clusters = reconstruct_image(dots, clusters)
-    centers = scale_up(centers)
+    elif method == 3:
+        scaled_dots = scale_down(dots)
+        clusters = agglomerative_clustering(scaled_dots, k)
+        clusters = reconstruct_image(dots, clusters)
+        centers = calculate_centroids(clusters)
 
-    print(time.time() - start)
+    elif method == 4:
+        clusters = divisive_clustering(dots, k)
+        centers = calculate_centroids(clusters)
+
+    else:
+        clusters, centers = [], []
+
+    print(f'{time.time() - start:.2f} s\n')
     plot_clusters(clusters, centers)
 
 
