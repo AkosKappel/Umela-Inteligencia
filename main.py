@@ -122,12 +122,24 @@ def k_means_centroid(dots: list, k: int):  # K-means klastrovanie
             centroids.extend(new_centroids)
 
         clusters = assign_clusters(dots, centroids)
-        if not any(euclidean_distance(prev_centroids[i], centroid) > 100 for i, centroid in enumerate(centroids)) \
+        if all(euclidean_distance(prev_centroids[i], centroid) < 100 for i, centroid in enumerate(centroids)) \
                 and all(len(cluster) > 0 for cluster in clusters):
             break
         prev_centroids = centroids
 
     return centroids, clusters
+
+
+def choose_medoids(dots, count, min_distance=300):  # Vyberie body ktore su od seba vzdialene aspon o urcitu vzdialenost
+    while True:
+        medoids = random.sample(dots, count)
+        for medoid in medoids:
+            if any(euclidean_distance(medoid, other_medoid) < min_distance
+                   for other_medoid in medoids if other_medoid != medoid):
+                break
+        else:
+            break
+    return medoids
 
 
 def calculate_medoids(clusters):  # Vypocita medoidy klastrov
@@ -149,14 +161,14 @@ def calculate_medoids(clusters):  # Vypocita medoidy klastrov
 
 
 def k_means_medoid(dots: list, k: int):  # K-medoids klastrovanie
-    prev_medoids = random.sample(dots, k)
+    prev_medoids = choose_medoids(dots, k)
     clusters = assign_clusters(dots, prev_medoids)
 
     while True:
         # plot_clusters(clusters, prev_medoids)
         medoids = calculate_medoids(clusters)
         clusters = assign_clusters(dots, medoids)
-        if not any(euclidean_distance(prev_medoids[i], medoid) > 100 for i, medoid in enumerate(medoids)):
+        if all(euclidean_distance(prev_medoids[i], medoid) < 100 for i, medoid in enumerate(medoids)):
             break
         prev_medoids = medoids
 
