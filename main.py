@@ -281,45 +281,46 @@ def set_k() -> int:
     return k
 
 
+def scale_down(dots, scale_factor=50):
+    x, y = list(zip(*dots))
+    x = list(map(lambda n: int(n/scale_factor), x))
+    y = list(map(lambda n: int(n/scale_factor), y))
+    return list(set(zip(x, y)))
+
+
+def scale_up(dots, scale_factor=50):
+    x, y = list(zip(*dots))
+    x = list(map(lambda n: n * scale_factor, x))
+    y = list(map(lambda n: n * scale_factor, y))
+    return list(zip(x, y))
+
+
 def main():
     random.seed(11)
-    dots = generate_dataset(20, 20000)
+    dots = generate_dataset(20, 2000)
 
     # TODO resize dots
+    # dots = scale_down(dots)  # Scale down
+    #
     # x, y = list(zip(*dots))
     # plt.scatter(x, y)
     # plt.show()
     # plt.clf()
-    #
-    # x = list(map(lambda n: int(n/50), x))
-    # y = list(map(lambda n: int(n/50), y))
-    # dots = list(set(zip(x, y)))
-    #
-    # x, y = list(zip(*dots))
-    # x = list(map(lambda n: n*50, x))
-    # y = list(map(lambda n: n*50, y))
-    #
-    # plt.scatter(x, y)
-    # plt.show()
-    # plt.clf()
-    #
-    # dots = list(zip(x, y))
     #
     # print(len(dots), len(set(dots)))
-    #
     # exit(0)
 
     start = time.time()
-    centers, clusters = k_means_centroid(dots, 20)
+    # centers, clusters = k_means_centroid(dots, 20)
     # centers, clusters = k_means_medoid(dots, 11)
-    plot_clusters(clusters, centers)
+    # plot_clusters(clusters, centers)
 
-    # clusters = agglomerative_clustering(dots, 11)
+    clusters = agglomerative_clustering(dots, 11)
+    # clusters = [scale_up(cluster) for cluster in clusters]  # Scale back up
     # clusters = divisive_clustering(dots, 20)
-    # plot_clusters(clusters)
+    plot_clusters(clusters)
 
     print(time.time() - start)
-    plt.show()
 
 
 # t = time.time()
