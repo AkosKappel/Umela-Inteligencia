@@ -295,30 +295,36 @@ def scale_up(dots, scale_factor=50):
     return list(zip(x, y))
 
 
+def reconstruct_image(dots, clusters, scale_factor=50):
+    final_clusters = [[] for _ in range(len(clusters))]
+
+    for dot in dots:
+        repr_dot = int(dot[0]/scale_factor), int(dot[1]/scale_factor)
+        for i, cluster in enumerate(clusters):
+            if repr_dot in cluster:
+                final_clusters[i].append(dot)
+                break
+
+    return final_clusters
+
+
 def main():
     random.seed(11)
-    dots = generate_dataset(20, 2000)
-
-    # TODO resize dots
-    # dots = scale_down(dots)  # Scale down
-    #
-    # x, y = list(zip(*dots))
-    # plt.scatter(x, y)
-    # plt.show()
-    # plt.clf()
-    #
-    # print(len(dots), len(set(dots)))
-    # exit(0)
-
+    dots = generate_dataset(20, 20000)
     start = time.time()
-    # centers, clusters = k_means_centroid(dots, 20)
-    # centers, clusters = k_means_medoid(dots, 11)
-    # plot_clusters(clusters, centers)
 
-    clusters = agglomerative_clustering(dots, 11)
-    # clusters = [scale_up(cluster) for cluster in clusters]  # Scale back up
+    scaled_dots = scale_down(dots)
+
+    centers, clusters = k_means_centroid(scaled_dots, 20)
+    clusters = reconstruct_image(dots, clusters)
+    centers = scale_up(centers)
+    # centers, clusters = k_means_medoid(dots, 11)
+    plot_clusters(clusters, centers)
+
+    # clusters = agglomerative_clustering(scaled_dots, 11)
+    # clusters = reconstruct_image(dots, clusters)
     # clusters = divisive_clustering(dots, 20)
-    plot_clusters(clusters)
+    # plot_clusters(clusters)
 
     print(time.time() - start)
 
