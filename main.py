@@ -47,7 +47,7 @@ def manhattan_distance(point_a, point_b):
 
 def plot_clusters(clusters, centers=None, show_and_clear=True):
     index = 0
-    # 21 farieeb pre vizualizaciu grafu
+    # 21 farieb pre vizualizaciu grafu
     colors = ('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
               '#7f7f7f', '#bcbd22', '#17becf', '#ffe119', '#4363d8', '#911eb4', '#bcf60c',
               '#fabebe', '#000075', '#008080', '#e6beff', '#fffac8', '#800000', '#aaffc3')
@@ -70,7 +70,7 @@ def plot_clusters(clusters, centers=None, show_and_clear=True):
         plt.clf()
 
 
-def assign_clusters(dots, centers):  # Kazdy bod prideli k najblizsiemu centroidu alebo medoidu
+def assign_clusters(dots, centers):  # Prideli kazdy bod k najblizsiemu centroidu alebo medoidu
     clusters = [[] for _ in range(len(centers))]
     inf = np.inf
 
@@ -88,7 +88,7 @@ def assign_clusters(dots, centers):  # Kazdy bod prideli k najblizsiemu centroid
     return clusters
 
 
-def get_plane_resolution(dots):  # Zisti minimalnu a maximalnu suradnicu medzi bodmi
+def get_plane_resolution(dots):  # Zisti minimalnu a maximalnu suradnicu bodov
     try:
         x, y = map(list, zip(*dots))
     except ValueError:  # Prazdny zoznam bodov
@@ -109,7 +109,7 @@ def calculate_centroids(clusters):  # Vypocita centroidy klastrov
     return centroids
 
 
-def k_means_centroid(dots: list, k: int):  # K-means klastrovanie
+def k_means(dots: list, k: int):  # K-means klastrovanie
     min_range, max_range = get_plane_resolution(dots)
     prev_centroids = generate_random_dots(k, min_range, max_range)
     clusters = assign_clusters(dots, prev_centroids)
@@ -160,7 +160,7 @@ def calculate_medoids(clusters):  # Vypocita medoidy klastrov
     return medoids
 
 
-def k_means_medoid(dots: list, k: int):  # K-medoids klastrovanie
+def k_medoids(dots: list, k: int):  # K-medoids klastrovanie
     prev_medoids = choose_medoids(dots, k)
     clusters = assign_clusters(dots, prev_medoids)
 
@@ -265,7 +265,7 @@ def divisive_clustering(dots: list, k: int):  # Divizivne zhlukovanie
         index = clusters.index(cluster)
         clusters.remove(cluster)
 
-        _, cluster = k_means_centroid(cluster, 2)  # Rozdeli najvasci klaster na 2 mensie
+        _, cluster = k_means(cluster, 2)  # Rozdeli najvasci klaster na 2 mensie
         clusters.insert(index, cluster[0])
         clusters.append(cluster[-1])
         # plot_clusters(clusters)
@@ -342,10 +342,10 @@ def main():
     start = time.time()
 
     if method == 1:
-        centers, clusters = k_means_centroid(dataset, k)
+        centers, clusters = k_means(dataset, k)
 
     elif method == 2:
-        centers, clusters = k_means_medoid(dataset, k)
+        centers, clusters = k_medoids(dataset, k)
 
     elif method == 3:
         scaled_dataset = scale_down(dataset)
