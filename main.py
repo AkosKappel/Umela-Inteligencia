@@ -335,26 +335,26 @@ def reconstruct_image(dots, clusters, scale_factor=50):  # Pomocou zmenseneho ro
 
 def main():
     random.seed(44)
-    dots = generate_dataset(20, 20_000)
+    dataset = generate_dataset(20, 20_000)
 
     method = set_clustering_method()
     k = set_k()
     start = time.time()
 
     if method == 1:
-        centers, clusters = k_means_centroid(dots, k)
+        centers, clusters = k_means_centroid(dataset, k)
 
     elif method == 2:
-        centers, clusters = k_means_medoid(dots, k)
+        centers, clusters = k_means_medoid(dataset, k)
 
     elif method == 3:
-        scaled_dots = scale_down(dots)
-        clusters = agglomerative_clustering(scaled_dots, k)
-        clusters = reconstruct_image(dots, clusters)
+        scaled_dataset = scale_down(dataset)
+        clusters = agglomerative_clustering(scaled_dataset, k)
+        clusters = reconstruct_image(dataset, clusters)
         centers = calculate_centroids(clusters)
 
     elif method == 4:
-        clusters = divisive_clustering(dots, k)
+        clusters = divisive_clustering(dataset, k)
         centers = calculate_centroids(clusters)
 
     else:
