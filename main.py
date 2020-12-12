@@ -151,7 +151,7 @@ def calculate_medoids(clusters):  # Vypocita medoidy klastrov
         medoid = None
 
         for dot in cluster:
-            dist_sum = sum(euclidean_distance(dot, other_dot) for other_dot in cluster)
+            dist_sum = sum(manhattan_distance(dot, other_dot) for other_dot in cluster)
             if dist_sum < min_distance_sum:
                 min_distance_sum = dist_sum
                 medoid = dot  # Bod s najmensim suctom vzdialensti od ostatnch bodov v klastri
