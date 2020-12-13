@@ -333,17 +333,15 @@ def reconstruct_image(dots, clusters, scale_factor=50):  # Pomocou zmenseneho ro
     return final_clusters
 
 
-def get_correct_clusters_count(clusters, centers):  # Vyhodnoti uspesnost klastrovania
-    n_successful_clusters = 0
+def get_average_clusters_distances(clusters, centers):  # Vypocita priemerne vydialenosti bodov od stredu klastra
+    distances = []
 
     for i, cluster in enumerate(clusters):
         dist_sum = sum(euclidean_distance(dot, centers[i]) for dot in cluster)
         avg_distance = int(dist_sum / len(cluster))
+        distances.append(avg_distance)
 
-        if avg_distance <= 500:  # Uspesny klaster ma priemernu vzdialenost bodov od stredu maximalne 500
-            n_successful_clusters += 1
-
-    return n_successful_clusters
+    return distances
 
 
 def main():
@@ -374,12 +372,16 @@ def main():
         clusters, centers = [], []
 
     end = time.time()
-    n_correct_cluster = get_correct_clusters_count(clusters, centers)
+    avg_distances = get_average_clusters_distances(clusters, centers)
+
+    # Uspesny klaster ma priemernu vzdialenost bodov od stredu maximalne 500
+    n_correct_cluster = len([dist for dist in avg_distances if dist <= 500])
     success_rate = n_correct_cluster * 100 / len(clusters)
 
     print(f'Uspesnost klastrovania: {success_rate:.2f} %',
+          f'Priemerne vzdialenosti: {avg_distances}',
           f'Pocet uspesnych klastrov: {n_correct_cluster}',
-          f'Cas trvania algoritmus: {end - start:.2f} s', sep='\n')
+          f'Cas trvania algoritmu: {end - start:.2f} s', sep='\n')
     plot_clusters(clusters, centers)
 
 
