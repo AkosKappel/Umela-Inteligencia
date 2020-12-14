@@ -1,10 +1,10 @@
 __author__ = 'Akos Kappel'
 
-from matplotlib import pyplot as plt
 from typing import List, Tuple
+from matplotlib import pyplot as plt  # Modul na vizualizaciu datasetu
 import numpy as np
-import random
 import time
+import random
 
 
 def generate_random_dots(count: int, min_range=-5000, max_range=5000) -> List[Tuple[int, int]]:
@@ -47,7 +47,7 @@ def manhattan_distance(point_a, point_b):
 
 def plot_clusters(clusters, centers=None, show_and_clear=True):
     index = 0
-    # 21 farieb pre vizualizaciu grafu
+    # 21 RGB farieb pre vizualizaciu grafu
     colors = ('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
               '#7f7f7f', '#bcbd22', '#17becf', '#ffe119', '#4363d8', '#911eb4', '#bcf60c',
               '#fabebe', '#000075', '#008080', '#e6beff', '#fffac8', '#800000', '#aaffc3')
@@ -80,7 +80,7 @@ def assign_clusters(dots, centers):  # Prideli kazdy bod k najblizsiemu centroid
 
         for i, centroid in enumerate(centers):
             dist = euclidean_distance(dot, centroid)
-            if dist < min_distance:
+            if dist < min_distance:  # Najde sa najkratsia vzdialenost
                 min_distance = dist
                 index = i
 
@@ -273,7 +273,7 @@ def divisive_clustering(dots: list, k: int):  # Divizivne zhlukovanie
     return clusters
 
 
-def set_clustering_method() -> int:
+def set_clustering_method() -> int:  # Zobrazi vsetky mozne sposoby klastrovania a caka na vyber
     print('Vyberte ktory algoritmus sa ma pouzit na klastrovanie:',
           '1 - k-means',
           '2 - k-medoids',
@@ -293,7 +293,7 @@ def set_clustering_method() -> int:
     return clustering_method
 
 
-def set_k() -> int:
+def set_k() -> int:  # Nastavi hodnotu pre k
     while True:
         k = input('Zadajte hodnotu K > ')
         try:
@@ -306,31 +306,31 @@ def set_k() -> int:
     return k
 
 
-def scale_down(dots, scale_factor=50):  # Zmensi rozsah a pocet bodov
-    x, y = list(zip(*dots))
-    x = list(map(lambda n: int(n/scale_factor), x))
-    y = list(map(lambda n: int(n/scale_factor), y))
-    return list(set(zip(x, y)))
-
-
-def scale_up(dots, scale_factor=50):  # Zvacsi rozsah bodov
-    x, y = list(zip(*dots))
-    x = list(map(lambda n: n * scale_factor, x))
-    y = list(map(lambda n: n * scale_factor, y))
-    return list(zip(x, y))
-
-
-def reconstruct_image(dots, clusters, scale_factor=50):  # Pomocou zmenseneho rozsahu priradi vsetky body do klastrov
-    final_clusters = [[] for _ in range(len(clusters))]
-
-    for dot in dots:
-        repr_dot = int(dot[0]/scale_factor), int(dot[1]/scale_factor)
-        for i, cluster in enumerate(clusters):
-            if repr_dot in cluster:
-                final_clusters[i].append(dot)
-                break
-
-    return final_clusters
+# def scale_down(dots, scale_factor=50):  # Zmensi rozsah a pocet bodov
+#     x, y = list(zip(*dots))
+#     x = list(map(lambda n: int(n/scale_factor), x))
+#     y = list(map(lambda n: int(n/scale_factor), y))
+#     return list(set(zip(x, y)))
+#
+#
+# def scale_up(dots, scale_factor=50):  # Zvacsi rozsah bodov
+#     x, y = list(zip(*dots))
+#     x = list(map(lambda n: n * scale_factor, x))
+#     y = list(map(lambda n: n * scale_factor, y))
+#     return list(zip(x, y))
+#
+#
+# def reconstruct_image(dots, clusters, scale_factor=50):  # Pomocou zmenseneho rozsahu priradi vsetky body do klastrov
+#     final_clusters = [[] for _ in range(len(clusters))]
+#
+#     for dot in dots:
+#         repr_dot = int(dot[0]/scale_factor), int(dot[1]/scale_factor)
+#         for i, cluster in enumerate(clusters):
+#             if repr_dot in cluster:
+#                 final_clusters[i].append(dot)
+#                 break
+#
+#     return final_clusters
 
 
 def get_average_clusters_distances(clusters, centers):  # Vypocita priemerne vydialenosti bodov od stredu klastra
@@ -346,9 +346,9 @@ def get_average_clusters_distances(clusters, centers):  # Vypocita priemerne vyd
 
 def main():
     random.seed(44)
-    dataset = generate_dataset(20, 20_000)
+    dataset = generate_dataset(20, 2_000)  # Vytvori sa dataset
 
-    method = set_clustering_method()
+    method = set_clustering_method()  # Nastavi sa metoda klastrovania a hodnota k
     k = set_k()
     start = time.time()
 
@@ -359,9 +359,9 @@ def main():
         centers, clusters = k_medoids(dataset, k)
 
     elif method == 3:
-        scaled_dataset = scale_down(dataset)
-        clusters = agglomerative_clustering(scaled_dataset, k)
-        clusters = reconstruct_image(dataset, clusters)
+        # scaled_dataset = scale_down(dataset)
+        clusters = agglomerative_clustering(dataset, k)
+        # clusters = reconstruct_image(dataset, clusters)
         centers = calculate_centroids(clusters)
 
     elif method == 4:
