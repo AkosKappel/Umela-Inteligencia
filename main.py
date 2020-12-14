@@ -346,7 +346,7 @@ def get_average_clusters_distances(clusters, centers):  # Vypocita priemerne vyd
 
 def main():
     random.seed(44)
-    dataset = generate_dataset(20, 2_000)  # Vytvori sa dataset
+    dataset = generate_dataset(20, 20_000)  # Vytvori sa dataset
 
     method = set_clustering_method()  # Nastavi sa metoda klastrovania a hodnota k
     k = set_k()
