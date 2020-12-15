@@ -306,31 +306,31 @@ def set_k() -> int:  # Nastavi hodnotu pre k
     return k
 
 
-# def scale_down(dots, scale_factor=50):  # Zmensi rozsah a pocet bodov
-#     x, y = list(zip(*dots))
-#     x = list(map(lambda n: int(n/scale_factor), x))
-#     y = list(map(lambda n: int(n/scale_factor), y))
-#     return list(set(zip(x, y)))
-#
-#
-# def scale_up(dots, scale_factor=50):  # Zvacsi rozsah bodov
-#     x, y = list(zip(*dots))
-#     x = list(map(lambda n: n * scale_factor, x))
-#     y = list(map(lambda n: n * scale_factor, y))
-#     return list(zip(x, y))
-#
-#
-# def reconstruct_image(dots, clusters, scale_factor=50):  # Pomocou zmenseneho rozsahu priradi vsetky body do klastrov
-#     final_clusters = [[] for _ in range(len(clusters))]
-#
-#     for dot in dots:
-#         repr_dot = int(dot[0]/scale_factor), int(dot[1]/scale_factor)
-#         for i, cluster in enumerate(clusters):
-#             if repr_dot in cluster:
-#                 final_clusters[i].append(dot)
-#                 break
-#
-#     return final_clusters
+def scale_down(dots, scale_factor=50):  # Zmensi rozsah a pocet bodov
+    x, y = list(zip(*dots))
+    x = list(map(lambda n: int(n/scale_factor), x))
+    y = list(map(lambda n: int(n/scale_factor), y))
+    return list(set(zip(x, y)))
+
+
+def scale_up(dots, scale_factor=50):  # Zvacsi rozsah bodov
+    x, y = list(zip(*dots))
+    x = list(map(lambda n: n * scale_factor, x))
+    y = list(map(lambda n: n * scale_factor, y))
+    return list(zip(x, y))
+
+
+def reconstruct_image(dots, clusters, scale_factor=50):  # Pomocou zmenseneho rozsahu priradi vsetky body do klastrov
+    final_clusters = [[] for _ in range(len(clusters))]
+
+    for dot in dots:
+        repr_dot = int(dot[0]/scale_factor), int(dot[1]/scale_factor)
+        for i, cluster in enumerate(clusters):
+            if repr_dot in cluster:
+                final_clusters[i].append(dot)
+                break
+
+    return final_clusters
 
 
 def get_average_clusters_distances(clusters, centers):  # Vypocita priemerne vydialenosti bodov od stredu klastra
@@ -345,7 +345,7 @@ def get_average_clusters_distances(clusters, centers):  # Vypocita priemerne vyd
 
 
 def main():
-    random.seed(44)
+    random.seed()
     dataset = generate_dataset(20, 20_000)  # Vytvori sa dataset
 
     method = set_clustering_method()  # Nastavi sa metoda klastrovania a hodnota k
@@ -359,9 +359,9 @@ def main():
         centers, clusters = k_medoids(dataset, k)
 
     elif method == 3:
-        # scaled_dataset = scale_down(dataset)
-        clusters = agglomerative_clustering(dataset, k)
-        # clusters = reconstruct_image(dataset, clusters)
+        scaled_dataset = scale_down(dataset)
+        clusters = agglomerative_clustering(scaled_dataset, k)
+        clusters = reconstruct_image(dataset, clusters)
         centers = calculate_centroids(clusters)
 
     elif method == 4:
