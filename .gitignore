@@ -1,1 +1,14 @@
+# IDE
+.idea
+
+# Python environment
 venv
+
+# cache
+__pycache__
+
+# File extensions
+*.csv
+*.txt
+*.jpg
+*.png

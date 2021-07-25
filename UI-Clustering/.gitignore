@@ -1,7 +1,0 @@
-*.csv
-*.txt
-*.jpg
-*.png
-venv
-.idea
-__pycache__

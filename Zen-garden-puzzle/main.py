@@ -1,6 +1,3 @@
-import random
-import time
-
 """
 Umela inteligencia - Zadanie 3
 Evolucny algoritmus
@@ -8,6 +5,9 @@ Evolucny algoritmus
 Nazov ulohy: Zenova zahrada
 Autor: Akos Kappel
 """
+
+import random
+import time
 
 # Pomocne globalne premenne:
 length, width = 0, 0  # Rozmery zahrady
@@ -18,7 +18,7 @@ input_blocks = {  # Reprezentacia blokov pri nacitavani zahrady z textoveho subo
     'K': -1,  # Kamene
     'Z': -2,  # Zlte listy
     'O': -3,  # Oranzove listy
-    'C': -4   # Cervene listy
+    'C': -4  # Cervene listy
 }
 output_blocks = {  # Reprezentacia blokov pri vypisovani zahrady
     -1: '\33[30mK\33[0m',
@@ -60,6 +60,7 @@ def main():
     population.show_best()
 
     print(f'{end - start:.3f} s')
+
 
 # --------------------------------------------------------------------------------------------------------------
 
@@ -130,6 +131,7 @@ def init_positions_ID():
         else:
             mapping = {num: (0, 2 * (length + width) - 1 - num)}
         positions_ID.update(mapping)
+
 
 # --------------------------------------------------------------------------------------------------------------
 
@@ -219,6 +221,7 @@ class Garden:
                 block_counter[-3] if -3 in block_counter.keys() else 0,
                 block_counter[-4] if -4 in block_counter.keys() else 0)
 
+
 # --------------------------------------------------------------------------------------------------------------
 
 
@@ -262,6 +265,7 @@ class Gene:
             return directions[2]  # Pohyb z dolnej casti smerom hore
         else:
             return directions[3]  # Pohyb z lavej strany smerom doprava
+
 
 # --------------------------------------------------------------------------------------------------------------
 
@@ -499,6 +503,7 @@ class Individual:
                 new_gene = Gene(missing.pop())
                 self.chromosome[i] = new_gene
 
+
 # --------------------------------------------------------------------------------------------------------------
 
 
@@ -638,5 +643,5 @@ class Population:
 
 
 if __name__ == "__main__":
-    puzzle = load_puzzle('test_gardens\\garden_1.txt')
+    puzzle = load_puzzle('gardens\\garden1.txt')
     main()
